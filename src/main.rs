@@ -3,7 +3,7 @@ mod utils;
 use std::fs;
 
 use objects::structs::NodeConfig;
-use utils::error::ConfigError;
+use utils::{docker_utils::generate_compose, error::ConfigError};
 
 use crate::objects::structs::Validate;
 
@@ -17,6 +17,14 @@ fn main() {
     match load_config("test.json") {
         Ok(config) => {
             println!("Configuration loaded successfully: {:#?}", config);
+            for stack in config.deploy_stacks {
+                generate_compose(
+                    stack.home_directory,
+                    stack.stack_name,
+                    stack.filename,
+                    stack.compose_spec,
+                );
+            }
         }
         Err(e) => {
             eprintln!("Error loading configuration: {}", e);
