@@ -1,0 +1,34 @@
+{
+  "version": "1",
+  "solution": "Saftey of the Earth",
+  "client": "Avengers",
+  "environment": "Earth",
+  "deploy_stacks": [
+    {
+      "stack_name": "web",
+      "name": "web",
+      "home_directory": "/home/ubuntu",
+      "filename": "web.yaml",
+      "compose_spec": {
+        "services": {
+          "crm": {
+            "container_name": "crm",
+            "image": "theinhumaneme/hello.img",
+            "restart": "unless-stopped",
+            "user": "0:0",
+            "stdin_open": false,
+            "tty": true,
+            "pull_policy": "always",
+            "ports": ["8080:8080"],
+            "volumes": ["/home/ubuntu/logs/crm:/logs"],
+            "environment": ["HELLO=BYE"],
+            "mem_reservation": "1gb",
+            "mem_limit": "1gb",
+            "oom_kill_disable": true,
+            "privileged": false
+          }
+        }
+      }
+    }
+  ]
+}
