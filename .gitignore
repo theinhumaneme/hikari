@@ -23,3 +23,5 @@ Cargo.lock
 # Added by cargo
 
 /target
+node_config.toml
+test.json
