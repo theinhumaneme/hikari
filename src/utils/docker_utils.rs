@@ -5,12 +5,18 @@ use std::{
 };
 
 use crate::objects::structs::ComposeSpec;
+pub fn dry_run_generate_compose(filename: String, compose_config: ComposeSpec) {
+    let yaml = serde_yaml::to_string(&compose_config).unwrap();
+    let base_path = format!("./{}", filename).to_string().to_owned();
+    let mut file = File::create(base_path.clone()).unwrap();
+    file.write_all(yaml.as_bytes()).unwrap();
+}
 pub fn generate_compose(
     compose_directory: String,
     stack_name: String,
     filename: String,
     compose_config: ComposeSpec,
-) -> String {
+) {
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
@@ -25,5 +31,4 @@ pub fn generate_compose(
     let mut file = File::create(base_path.clone()).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
     println!("Generating Compose for {} Complete", stack_name);
-    base_path
 }
