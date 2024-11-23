@@ -18,6 +18,7 @@ serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 serde_yaml = "0.9.34"
 thiserror = "2.0.3"
+toml = "0.8.19"
 
 [profile.dev]
 lto = false

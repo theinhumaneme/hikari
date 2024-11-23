@@ -22,7 +22,6 @@ pub struct MainConfig {
     pub solution: String,
     pub client: String,
     pub environment: String,
-    pub update_options: UpdateOptions,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -32,8 +31,30 @@ pub struct UpdateOptions {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct NodeConfig {
+pub struct HikariConfig {
     pub version: String,
+    pub deploy_configs: HashMap<String, NodeConfig>,
+}
+impl Validate for HikariConfig {
+    fn validate(&self) -> Result<(), ConfigError> {
+        validate_field!(self.version, "version");
+
+        if self.deploy_configs.is_empty() {
+            return Err(ConfigError::MissingField("deploy_configs".to_string()));
+        }
+
+        for (index, config) in self.deploy_configs.iter().enumerate() {
+            config.1.validate().map_err(|e| {
+                ConfigError::MissingField(format!("deploy_configs[{}]: {}", index, e))
+            })?;
+        }
+
+        Ok(())
+    }
+}
+
+#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct NodeConfig {
     pub client: String,
     pub environment: String,
     pub solution: String,
@@ -41,7 +62,6 @@ pub struct NodeConfig {
 }
 impl Validate for NodeConfig {
     fn validate(&self) -> Result<(), ConfigError> {
-        validate_field!(self.version, "version");
         validate_field!(self.client, "client");
         validate_field!(self.environment, "environment");
         validate_field!(self.solution, "solution");

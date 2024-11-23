@@ -1,23 +1,23 @@
 mod objects;
 mod utils;
-use std::{fs, thread, time::Duration};
+use std::{fs, path::Path, process::exit, thread, time::Duration};
 
 use clap::Parser;
 use dotenvy::dotenv;
-use objects::structs::NodeConfig;
+use objects::structs::{HikariConfig, MainConfig, NodeConfig};
 use utils::{
     cli::{HikariCli, HikariCommands},
     crypto::{decrypt_json, encrypt_json},
-    docker_utils::{dry_run_generate_compose, generate_compose},
+    docker_utils::{dry_run_generate_compose, generate_compose, start_compose, stop_compose},
     error::ConfigError,
-    file_utils::download_file,
+    file_utils::{copy_file, download_file},
 };
 
 use crate::objects::structs::Validate;
 
-fn load_config(file_path: String) -> Result<NodeConfig, ConfigError> {
+fn load_config(file_path: String) -> Result<HikariConfig, ConfigError> {
     let contents = fs::read_to_string(file_path)?;
-    let config: NodeConfig = serde_json::from_str(&contents)?;
+    let config: HikariConfig = serde_json::from_str(&contents)?;
     config.validate()?;
     Ok(config)
 }
@@ -29,10 +29,6 @@ fn main() {
     );
     let private_key_path: String = std::env::var("PRIVATE_KEY_FILENAME").expect(
         "PRIVATE_KEY_FILENAME must
-    be set.",
-    );
-    let updated_config_file = std::env::var("UPDATED_CONFIG_FILE").expect(
-        "UPDATED_CONFIG_FILE must
     be set.",
     );
     let updated_config_file_enc = std::env::var("ENCRYPTED_FILE_PATH").expect(
@@ -51,6 +47,23 @@ fn main() {
         "POLL_INTERVAL must
     be set.",
     );
+    let reference_config_file = std::env::var("REFERENCE_CONFIG_FILE").expect(
+        "REFERENCE_FILE must
+    be set.",
+    );
+
+    let mut node_config: MainConfig = Default::default();
+    if Path::exists(Path::new("config.toml")) {
+        node_config = match toml::from_str(fs::read_to_string("config.toml").unwrap().as_str()) {
+            Ok(c) => c,
+            Err(_) => {
+                eprintln!("Could not load the `config.toml` file ");
+                exit(1);
+            }
+        };
+    } else {
+        eprintln!("`config.toml` file does not exist")
+    }
     let cli = HikariCli::parse();
 
     match &cli.command {
@@ -68,8 +81,10 @@ fn main() {
         }
         HikariCommands::DryRun { input_file } => match load_config(input_file.clone()) {
             Ok(config) => {
-                for stack in config.deploy_stacks {
-                    dry_run_generate_compose(stack.filename, stack.compose_spec);
+                for deploy_config in config.deploy_configs {
+                    for stack in deploy_config.1.deploy_stacks {
+                        dry_run_generate_compose(stack.filename, stack.compose_spec);
+                    }
                 }
             }
             Err(e) => {
@@ -81,19 +96,63 @@ fn main() {
                 true => {
                     match decrypt_json(
                         updated_config_file_enc.clone(),
-                        updated_config_file.clone(),
+                        updated_config_file_dec.clone(),
                         private_key_path.clone(),
                     ) {
                         Ok(()) => match load_config(updated_config_file_dec.clone()) {
                             Ok(config) => {
-                                println!("Configuration loaded successfully: {:#?}", config);
-                                for stack in config.deploy_stacks {
-                                    generate_compose(
-                                        stack.home_directory,
-                                        stack.stack_name,
-                                        stack.filename,
-                                        stack.compose_spec,
-                                    );
+                                if config.version.trim() == node_config.version {
+                                    for deploy_config in &config.deploy_configs {
+                                        if (&node_config.client.trim()
+                                            == &deploy_config.1.client.trim()
+                                            && &node_config.solution.trim()
+                                                == &deploy_config.1.solution.trim()
+                                            && &node_config.environment.trim()
+                                                == &deploy_config.1.environment.trim())
+                                        {
+                                            for stack in deploy_config.1.deploy_stacks.clone() {
+                                                let compose_path: String = generate_compose(
+                                                    stack.home_directory,
+                                                    stack.stack_name.clone(),
+                                                    stack.filename,
+                                                    stack.compose_spec,
+                                                );
+                                                match stop_compose(compose_path.clone()) {
+                                                    true => {
+                                                        println!(
+                                                            "Stack {} was successfully stopped",
+                                                            stack.stack_name
+                                                        );
+                                                        match start_compose(compose_path.clone()) {
+                                                            true => {
+                                                                println!(
+                                                                    "Stack {} was successfully started ",
+                                                                    stack.stack_name
+                                                                )
+                                                            }
+                                                            false => {
+                                                                println!(
+                                                                    "Stack {} could not be started",
+                                                                    stack.stack_name
+                                                                )
+                                                            }
+                                                        }
+                                                    }
+                                                    false => {
+                                                        println!(
+                                                            "Stack {} could not be stopped",
+                                                            stack.stack_name
+                                                        )
+                                                    }
+                                                };
+                                            }
+                                        } else {
+                                            continue;
+                                        }
+                                    }
+                                } else {
+                                    eprintln!(" Incoming `Hikari Config` version does not match with `Node` version`");
+                                    exit(1);
                                 }
                             }
                             Err(e) => {
