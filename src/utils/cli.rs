@@ -53,4 +53,5 @@ pub enum HikariCommands {
         )]
         input_file: String,
     },
+    Daemon,
 }
