@@ -25,3 +25,7 @@ Cargo.lock
 /target
 node_config.toml
 test.json
+private_key.pem
+public_key.pem
+*.bin
+*.env
