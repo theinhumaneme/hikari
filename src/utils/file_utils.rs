@@ -1,6 +1,6 @@
 use std::{
     fs::{self, File},
-    io::{copy, Read},
+    io::copy,
 };
 
 use reqwest::blocking::Client;
@@ -18,5 +18,5 @@ pub fn download_file(file_url: String, filename: String) -> bool {
 }
 
 pub fn copy_file(source: String, destination: String) {
-    fs::write(destination, fs::read(source).unwrap());
+    let _ = fs::write(destination, fs::read(source).unwrap());
 }
