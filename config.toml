@@ -1,5 +1,5 @@
 remote_url = "..."
 poll_interval = "10"                   # In seconds
-encrypted_file_path = "e.bin"
+encrypted_file_path = "encrypted.bin"
 decrypted_file_path = "decrypted.json"
 reference_file_path = "reference.json"
