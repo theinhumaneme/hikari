@@ -8,9 +8,9 @@ use crate::{
 pub fn manage_node(
     current_config: &HikariConfig,
     incoming_config: &HikariConfig,
-    client: String,
-    environment: String,
-    solution: String,
+    client: &str,
+    environment: &str,
+    solution: &str,
 ) {
     for (key, current_deploy_config) in &current_config.deploy_configs {
         // filter current config matches the node's parameters
@@ -163,24 +163,26 @@ fn compare_stacks(current_deploy_config: &NodeConfig, incoming_deploy_config: &N
 
 pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
     match operation {
-        "stop" => match stop_compose(format!("{}/{}", stack.home_directory, stack.filename)) {
-            true => {
-                println!("Successfully stopped removed stack {}", stack.stack_name);
-                true
+        "stop" => {
+            match stop_compose(format!("{}/{}", stack.home_directory, stack.filename).as_str()) {
+                true => {
+                    println!("Successfully stopped removed stack {}", stack.stack_name);
+                    true
+                }
+                false => {
+                    println!("Could not stop removed stack {}", stack.stack_name);
+                    false
+                }
             }
-            false => {
-                println!("Could not stop removed stack {}", stack.stack_name);
-                false
-            }
-        },
+        }
         "start" => {
             let stack_filepath: String = generate_compose(
-                stack.home_directory.clone(),
-                stack.stack_name.clone(),
-                stack.filename.clone(),
-                stack.compose_spec.clone(),
+                &stack.home_directory,
+                &stack.stack_name,
+                &stack.filename,
+                &stack.compose_spec,
             );
-            match start_compose(stack_filepath) {
+            match start_compose(&stack_filepath) {
                 true => {
                     println!("Successfully started added stack {}", stack.stack_name);
                     true

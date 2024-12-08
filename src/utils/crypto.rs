@@ -34,9 +34,9 @@ fn read_private_key(key_path: &str) -> Result<Rsa<Private>, CryptoError> {
 }
 
 pub fn encrypt_json(
-    input_path: String,
-    output_path: String,
-    public_key_path: String,
+    input_path: &str,
+    output_path: &str,
+    public_key_path: &str,
 ) -> Result<(), CryptoError> {
     // Read the JSON file
     let json_content = fs::read_to_string(input_path)?;
@@ -55,7 +55,7 @@ pub fn encrypt_json(
     let encrypted_data = encrypt(Cipher::aes_256_cbc(), &aes_key, Some(&iv), &json_bytes)?;
 
     // Read the public key
-    let rsa = read_public_key(public_key_path.as_str())?;
+    let rsa = read_public_key(public_key_path)?;
 
     // Encrypt the AES key with RSA
     let mut encrypted_key = vec![0; rsa.size() as usize];
@@ -78,9 +78,9 @@ pub fn encrypt_json(
 }
 
 pub fn decrypt_json(
-    input_path: String,
-    output_path: String,
-    private_key_path: String,
+    input_path: &str,
+    output_path: &str,
+    private_key_path: &str,
 ) -> Result<(), CryptoError> {
     // Read the encrypted file
     let encrypted_data = fs::read(input_path)?;
@@ -102,7 +102,7 @@ pub fn decrypt_json(
     let encrypted_content = &encrypted_data[4 + key_len + 16..];
 
     // Read the private key
-    let rsa = read_private_key(private_key_path.as_str())?;
+    let rsa = read_private_key(private_key_path)?;
 
     // Decrypt the AES key
     let mut aes_key = vec![0; rsa.size() as usize];

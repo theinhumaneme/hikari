@@ -10,19 +10,19 @@ use crate::objects::structs::ComposeSpec;
 pub fn dry_run_generate_compose(filename: String, compose_config: ComposeSpec) {
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
     let base_path = format!("./{}", filename).to_string().to_owned();
-    let mut file = File::create(base_path.clone()).unwrap();
+    let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
 }
 pub fn generate_compose(
-    compose_directory: String,
-    stack_name: String,
-    filename: String,
-    compose_config: ComposeSpec,
+    compose_directory: &str,
+    stack_name: &str,
+    filename: &str,
+    compose_config: &ComposeSpec,
 ) -> String {
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
-        create_dir_all(format!("{}", compose_directory.clone())).unwrap();
+        create_dir_all(format!("{}", compose_directory)).unwrap();
         println!("Directory created:{}", compose_directory);
     } else {
         println!("Directory already exists: {}", compose_directory);
@@ -30,7 +30,7 @@ pub fn generate_compose(
     let base_path = format!("{}/{}", compose_directory, filename)
         .to_string()
         .to_owned();
-    let mut file = File::create(base_path.clone()).unwrap();
+    let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
     println!("Generating Compose for {} Complete", stack_name);
     return base_path;
@@ -104,21 +104,21 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
     }
 }
 
-pub fn start_compose(compose_file_path: String) -> bool {
+pub fn start_compose(compose_file_path: &str) -> bool {
     dbg!(&compose_file_path);
     let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "up", "-d"];
-    if Path::exists(Path::new(compose_file_path.as_str())) {
+    let args = ["compose", "-f", compose_file_path, "up", "-d"];
+    if Path::exists(Path::new(compose_file_path)) {
         return execute_command(command, args.to_vec());
     }
     eprintln!("compose file does not exist");
     false
 }
-pub fn stop_compose(compose_file_path: String) -> bool {
+pub fn stop_compose(compose_file_path: &str) -> bool {
     dbg!(&compose_file_path);
     let command = "docker";
-    let args = ["compose", "-f", compose_file_path.as_str(), "down"];
-    if Path::exists(Path::new(compose_file_path.as_str())) {
+    let args = ["compose", "-f", compose_file_path, "down"];
+    if Path::exists(Path::new(compose_file_path)) {
         return execute_command(command, args.to_vec());
     }
     eprintln!("compose file does not exist");

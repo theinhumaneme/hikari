@@ -17,7 +17,7 @@ use utils::{
 
 use crate::objects::structs::Validate;
 
-fn load_config(file_path: String) -> Result<HikariConfig, ConfigError> {
+fn load_config(file_path: &str) -> Result<HikariConfig, ConfigError> {
     let contents = fs::read_to_string(file_path)?;
     let config: HikariConfig = serde_json::from_str(&contents)?;
     config.validate()?;
@@ -59,18 +59,17 @@ fn main() {
     } else {
         eprintln!("`config.toml` file does not exist")
     }
-    if !Path::new(&update_config.reference_file_path.clone()).exists() {
+    if !Path::new(&update_config.reference_file_path).exists() {
         println!(
             "Looks like hikari is being installed here, generating placeholder {}",
-            &update_config.reference_file_path.clone()
+            &update_config.reference_file_path
         );
         let config = json!({
             "version": "1",
             "deploy_configs": {}
         });
         let json_data = serde_json::to_string_pretty(&config).expect("Failed to serialize JSON");
-        fs::write(&update_config.reference_file_path.clone(), json_data)
-            .expect("Unable to write file");
+        fs::write(&update_config.reference_file_path, json_data).expect("Unable to write file");
     }
 
     let cli = HikariCli::parse();
@@ -80,15 +79,15 @@ fn main() {
             input_file,
             output_file,
         } => {
-            let _ = encrypt_json(input_file.clone(), output_file.clone(), public_key_path);
+            let _ = encrypt_json(input_file, output_file, &public_key_path);
         }
         HikariCommands::Decrypt {
             input_file,
             output_file,
         } => {
-            let _ = decrypt_json(input_file.clone(), output_file.clone(), private_key_path);
+            let _ = decrypt_json(input_file, output_file, &private_key_path);
         }
-        HikariCommands::DryRun { input_file } => match load_config(input_file.clone()) {
+        HikariCommands::DryRun { input_file } => match load_config(input_file) {
             Ok(config) => {
                 for deploy_config in config.deploy_configs {
                     for stack in deploy_config.1.deploy_stacks {
@@ -102,30 +101,30 @@ fn main() {
         },
         HikariCommands::Daemon => loop {
             match download_file(
-                update_config.remote_url.clone(),
-                update_config.encrypted_file_path.clone(),
+                &update_config.remote_url,
+                &update_config.encrypted_file_path,
             ) {
                 true => {
                     match decrypt_json(
-                        update_config.encrypted_file_path.clone(),
-                        update_config.decrypted_file_path.clone(),
-                        private_key_path.clone(),
+                        &update_config.encrypted_file_path,
+                        &update_config.decrypted_file_path,
+                        &private_key_path,
                     ) {
-                        Ok(()) => match load_config(update_config.decrypted_file_path.clone()) {
+                        Ok(()) => match load_config(&update_config.decrypted_file_path) {
                             Ok(config) => {
                                 if config.version.trim() == node_config.version {
-                                    match load_config(update_config.reference_file_path.clone()) {
+                                    match load_config(&update_config.reference_file_path) {
                                         Ok(reference) => {
                                             manage_node(
                                                 &reference,
                                                 &config,
-                                                node_config.client.clone(),
-                                                node_config.environment.clone(),
-                                                node_config.solution.clone(),
+                                                &node_config.client,
+                                                &node_config.environment,
+                                                &node_config.solution,
                                             );
                                             let _ = copy_file(
-                                                update_config.decrypted_file_path.clone(),
-                                                update_config.reference_file_path.clone(),
+                                                &update_config.decrypted_file_path,
+                                                &update_config.reference_file_path,
                                             );
                                         }
                                         Err(e) => {
