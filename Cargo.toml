@@ -5,7 +5,7 @@ edition = "2024"
 authors = ["Kalyan Mudumby"]
 description = "Rule all your VMs handsfree with hikari - A lightweight deployment manager, A highly configurable node specific deployment solution."
 repository = "https://github.com/theinhumaneme/hikari"
-rust-version = "1.85.0"
+rust-version = "1.86.0"
 readme = "README.md"
 
 [dependencies]
