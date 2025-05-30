@@ -53,5 +53,6 @@ pub enum HikariCommands {
         )]
         input_file: String,
     },
+    /// Run hikari in Daemon Mode
     Daemon,
 }
