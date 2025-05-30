@@ -17,7 +17,7 @@ macro_rules! validate_field {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct MainConfig {
+pub struct NodeConfig {
     pub version: String,
     pub solution: String,
     pub client: String,
@@ -25,7 +25,7 @@ pub struct MainConfig {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UpdateOptions {
+pub struct NodeUpdateOptions {
     pub remote_url: String,
     pub poll_interval: String,
     pub encrypted_file_path: String,
@@ -36,7 +36,7 @@ pub struct UpdateOptions {
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HikariConfig {
     pub version: String,
-    pub deploy_configs: HashMap<String, NodeConfig>,
+    pub deploy_configs: HashMap<String, DeployConfig>,
 }
 impl Validate for HikariConfig {
     fn validate(&self) -> Result<(), ConfigError> {
@@ -53,13 +53,13 @@ impl Validate for HikariConfig {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct NodeConfig {
+pub struct DeployConfig {
     pub client: String,
     pub environment: String,
     pub solution: String,
     pub deploy_stacks: Vec<StackConfig>,
 }
-impl Validate for NodeConfig {
+impl Validate for DeployConfig {
     fn validate(&self) -> Result<(), ConfigError> {
         validate_field!(self.client, "client");
         validate_field!(self.environment, "environment");

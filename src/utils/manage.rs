@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    objects::structs::{HikariConfig, NodeConfig, StackConfig},
+    objects::structs::{DeployConfig, HikariConfig, StackConfig},
     utils::docker_utils::{generate_compose, start_compose, stop_compose},
 };
 
@@ -115,7 +115,7 @@ pub fn manage_node(
     }
 }
 
-fn compare_stacks(current_deploy_config: &NodeConfig, incoming_deploy_config: &NodeConfig) {
+fn compare_stacks(current_deploy_config: &DeployConfig, incoming_deploy_config: &DeployConfig) {
     // check if any stack has been deleted
     let current_stacks: HashMap<String, &StackConfig> = current_deploy_config
         .deploy_stacks
