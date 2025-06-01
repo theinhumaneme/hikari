@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "hikari",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}
