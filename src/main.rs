@@ -4,7 +4,6 @@ mod server;
 mod utils;
 
 use clap::Parser;
-
 use mode::{daemon::daemon_mode, server::server_mode};
 use utils::{
     cli::{HikariCli, HikariCommands},

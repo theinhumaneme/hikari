@@ -16,9 +16,11 @@ pub async fn get_all_deployments(
             .fetch_all(&state.pool)
             .await
             .map_err(|err| {
-                // Log the error server-side for debugging :contentReference[oaicite:13]{index=13}
+                // Log the error server-side for debugging
+                // :contentReference[oaicite:13]{index=13}
                 error!("Database query failed: {}", err);
-                // Return a generic error message to the client with 500 status :contentReference[oaicite:14]{index=14}
+                // Return a generic error message to the client with 500 status
+                // :contentReference[oaicite:14]{index=14}
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to fetch deployments".to_string(),
@@ -44,9 +46,11 @@ pub async fn get_deployment(
     .fetch_all(&state.pool)
     .await
     .map_err(|err| {
-        // Log the error server-side for debugging :contentReference[oaicite:13]{index=13}
+        // Log the error server-side for debugging
+        // :contentReference[oaicite:13]{index=13}
         error!("Database query failed: {}", err);
-        // Return a generic error message to the client with 500 status :contentReference[oaicite:14]{index=14}
+        // Return a generic error message to the client with 500 status
+        // :contentReference[oaicite:14]{index=14}
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to fetch deployments".to_string(),
@@ -77,9 +81,11 @@ pub async fn post_deployment(
     .fetch_one(&state.pool)
     .await
     .map_err(|err| {
-        // Log the error server-side for debugging :contentReference[oaicite:13]{index=13}
+        // Log the error server-side for debugging
+        // :contentReference[oaicite:13]{index=13}
         error!("Database query failed: {}", err);
-        // Return a generic error message to the client with 500 status :contentReference[oaicite:14]{index=14}
+        // Return a generic error message to the client with 500 status
+        // :contentReference[oaicite:14]{index=14}
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to fetch deployments".to_string(),
@@ -129,9 +135,11 @@ pub async fn delete_deployment(
     .fetch_one(&state.pool)
     .await
     .map_err(|err| {
-        // Log the error server-side for debugging :contentReference[oaicite:13]{index=13}
+        // Log the error server-side for debugging
+        // :contentReference[oaicite:13]{index=13}
         error!("Database query failed: {}", err);
-        // Return a generic error message to the client with 500 status :contentReference[oaicite:14]{index=14}
+        // Return a generic error message to the client with 500 status
+        // :contentReference[oaicite:14]{index=14}
         (
             StatusCode::INTERNAL_SERVER_ERROR,
             "Failed to fetch deployments".to_string(),

@@ -2,11 +2,8 @@ use std::{fs, path::Path, process::exit};
 
 use serde_json::json;
 
-use crate::objects::structs::{HikariConfig, NodeConfig, NodeUpdateOptions};
-
 use super::error::ConfigError;
-
-use crate::objects::structs::Validate;
+use crate::objects::structs::{HikariConfig, NodeConfig, NodeUpdateOptions, Validate};
 
 pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
     let mut node_config: NodeConfig = Default::default();
