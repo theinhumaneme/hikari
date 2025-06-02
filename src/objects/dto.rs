@@ -8,25 +8,27 @@ pub struct DeployConfigDTO {
     pub client: String,
     pub environment: String,
     pub solution: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub stack_ids: Option<Vec<i64>>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct StackConfig {
+pub struct StackConfigDTO {
     pub id: i64,
-    pub deploy_config_id: i64,
+    pub deployment_id: i64,
     pub stack_name: String,
     pub filename: String,
     pub home_directory: String,
-    pub compose_spec: ComposeSpec,
+    pub compose_spec: ComposeSpecDTO,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ComposeSpec {
-    pub services: HashMap<String, Container>,
+pub struct ComposeSpecDTO {
+    pub services: HashMap<String, ContainerDTO>,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct Container {
+pub struct ContainerDTO {
     pub container_name: String,
     pub image: String,
     pub restart: String,
