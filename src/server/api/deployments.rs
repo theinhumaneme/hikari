@@ -1,12 +1,12 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, debug_handler, extract::Query};
-use log::{error, trace};
+use log::error;
 use reqwest::StatusCode;
 use serde::Deserialize;
 use sqlx::{query, query_as};
 
-use crate::{objects::dto::DeployConfigDTO, server::app_state::AppState};
+use crate::{mode::server::AppState, server::models::deploy_config::DeployConfigDTO};
 
 #[debug_handler]
 pub async fn get_all_deployments(

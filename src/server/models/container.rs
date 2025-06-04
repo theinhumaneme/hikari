@@ -1,31 +1,4 @@
-use std::collections::HashMap;
-
 use serde::{Deserialize, Serialize};
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct DeployConfigDTO {
-    pub id: Option<i64>,
-    pub client: String,
-    pub environment: String,
-    pub solution: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub stack_ids: Option<Vec<i64>>,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct StackConfigDTO {
-    pub id: i64,
-    pub deployment_id: i64,
-    pub stack_name: String,
-    pub filename: String,
-    pub home_directory: String,
-    pub compose_spec: ComposeSpecDTO,
-}
-
-#[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct ComposeSpecDTO {
-    pub services: HashMap<String, ContainerDTO>,
-}
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ContainerDTO {
