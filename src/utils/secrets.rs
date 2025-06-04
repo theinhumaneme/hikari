@@ -13,7 +13,7 @@ pub fn load_secrets(mode: &str) -> Vec<String> {
                 "PRIVATE_KEY_FILENAME must
             be set.",
             );
-            return vec![public_key_path, private_key_path];
+            vec![public_key_path, private_key_path]
         }
         "server" => {
             let pg_host: String = std::env::var("POSTGRES_HOST").expect(
@@ -36,11 +36,11 @@ pub fn load_secrets(mode: &str) -> Vec<String> {
                 "POSTGRES_PORT must
             be set.",
             );
-            return vec![pg_user, pg_pass, pg_host, pg_port, pg_db];
+            vec![pg_user, pg_pass, pg_host, pg_port, pg_db]
         }
         _ => {
             warn!("Secrets Could Not be loaded as no MODE configured");
-            return vec![];
+            vec![]
         }
-    };
+    }
 }

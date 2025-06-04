@@ -36,7 +36,7 @@ pub async fn server_mode() {
         )
         .await
         .unwrap();
-    let shared_state = Arc::new(AppState { pool: pool });
+    let shared_state = Arc::new(AppState { pool });
     let app = Router::new()
         .route("/deployments", get(get_all_deployments))
         .route("/deployment", get(get_deployment))

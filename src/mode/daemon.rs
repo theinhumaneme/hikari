@@ -23,7 +23,7 @@ pub fn daemon_mode(
             match decrypt_json(
                 &node_update_config.encrypted_file_path,
                 &node_update_config.decrypted_file_path,
-                &private_key_path,
+                private_key_path,
             ) {
                 Ok(()) => match load_hikari_config(&node_update_config.decrypted_file_path) {
                     Ok(config) => {
@@ -37,13 +37,13 @@ pub fn daemon_mode(
                                         &node_config.environment,
                                         &node_config.solution,
                                     );
-                                    let _ = copy_file(
+                                    copy_file(
                                         &node_update_config.decrypted_file_path,
                                         &node_update_config.reference_file_path,
                                     );
                                 }
                                 Err(e) => {
-                                    eprintln!("Error loading reference configuration: {}", e);
+                                    eprintln!("Error loading reference configuration: {e}");
                                 }
                             }
                         } else {
@@ -54,7 +54,7 @@ pub fn daemon_mode(
                         }
                     }
                     Err(e) => {
-                        eprintln!("Error loading configuration: {}", e);
+                        eprintln!("Error loading configuration: {e}");
                     }
                 },
                 _ => {

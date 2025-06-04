@@ -44,7 +44,7 @@ pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
         fs::write(&node_update_config.reference_file_path, json_data)
             .expect("Unable to write file");
     }
-    return (node_config, node_update_config);
+    (node_config, node_update_config)
 }
 
 pub fn load_hikari_config(file_path: &str) -> Result<HikariConfig, ConfigError> {

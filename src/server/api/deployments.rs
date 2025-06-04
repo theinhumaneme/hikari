@@ -34,7 +34,7 @@ pub async fn get_all_deployments(
     .map_err(|err| {
         // Log the error server-side for debugging
         // :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status
         // :contentReference[oaicite:14]{index=14}
         (
@@ -78,7 +78,7 @@ pub async fn get_deployment(
     .map_err(|err| {
         // Log the error server-side for debugging
         // :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status
         // :contentReference[oaicite:14]{index=14}
         (
@@ -112,7 +112,7 @@ pub async fn post_deployment(
     .map_err(|err| {
         // Log the error server-side for debugging
         // :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status
         // :contentReference[oaicite:14]{index=14}
         (
@@ -146,7 +146,7 @@ pub async fn update_deployment(
     .await
     .map_err(|err| {
         // Log the error server-side for debugging :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status :contentReference[oaicite:14]{index=14}
         (
             StatusCode::INTERNAL_SERVER_ERROR,
@@ -170,7 +170,7 @@ pub async fn update_deployment(
     .map_err(|err| {
         // Log the error server-side for debugging
         // :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status
         // :contentReference[oaicite:14]{index=14}
         (
@@ -206,7 +206,7 @@ pub async fn delete_deployment(
     .fetch_one(&state.pool)
     .await
     .map_err(|err| {
-        error!("DB error: {}", err);
+        error!("DB error: {err}");
         (StatusCode::INTERNAL_SERVER_ERROR, "DB failure".into())
     })?;
     if !exists_row.exists {
@@ -223,7 +223,7 @@ pub async fn delete_deployment(
     .map_err(|err| {
         // Log the error server-side for debugging
         // :contentReference[oaicite:13]{index=13}
-        error!("Database query failed: {}", err);
+        error!("Database query failed: {err}");
         // Return a generic error message to the client with 500 status
         // :contentReference[oaicite:14]{index=14}
         (

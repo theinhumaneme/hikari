@@ -41,7 +41,7 @@ async fn main() {
                 }
             }
             Err(e) => {
-                eprintln!("Error loading configuration: {}", e);
+                eprintln!("Error loading configuration: {e}");
             }
         },
         HikariCommands::Daemon => loop {

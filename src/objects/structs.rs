@@ -44,7 +44,7 @@ impl Validate for HikariConfig {
 
         for (index, config) in self.deploy_configs.iter().enumerate() {
             config.1.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_configs[{}]: {}", index, e))
+                ConfigError::MissingField(format!("deploy_configs[{index}]: {e}"))
             })?;
         }
 
@@ -71,7 +71,7 @@ impl Validate for DeployConfig {
 
         for (index, stack) in self.deploy_stacks.iter().enumerate() {
             stack.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_stacks[{}]: {}", index, e))
+                ConfigError::MissingField(format!("deploy_stacks[{index}]: {e}"))
             })?;
         }
 
@@ -112,7 +112,7 @@ impl Validate for ComposeSpec {
         for (name, service) in &self.services {
             service
                 .validate()
-                .map_err(|e| ConfigError::MissingField(format!("service[{}]: {}", name, e)))?;
+                .map_err(|e| ConfigError::MissingField(format!("service[{name}]: {e}")))?;
         }
         Ok(())
     }
