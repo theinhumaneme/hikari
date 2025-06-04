@@ -4,19 +4,20 @@ use axum::{
     Extension, Router,
     routing::{delete, get, post, put},
 };
-use sqlx::postgres::PgPoolOptions;
+use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::net::TcpListener;
 
 use crate::{
-    server::{
-        api::deployments::{
-            delete_deployment, get_all_deployments, get_deployment, post_deployment,
-            update_deployment,
-        },
-        app_state::AppState,
+    server::api::deployments::{
+        delete_deployment, get_all_deployments, get_deployment, post_deployment, update_deployment,
     },
     utils::secrets::load_secrets,
 };
+
+#[derive(Clone, Debug)]
+pub struct AppState {
+    pub pool: PgPool,
+}
 
 pub async fn server_mode() {
     let secrets = load_secrets("server");
@@ -35,7 +36,7 @@ pub async fn server_mode() {
         )
         .await
         .unwrap();
-    let shared_state = Arc::new(AppState { pool: pool });
+    let shared_state = Arc::new(AppState { pool });
     let app = Router::new()
         .route("/deployments", get(get_all_deployments))
         .route("/deployment", get(get_deployment))

@@ -14,7 +14,7 @@ pub fn download_file(file_url: &str, filename: &str) -> bool {
     }
     let mut file = File::create(filename).unwrap();
     copy(&mut response.bytes().unwrap().as_ref(), &mut file).unwrap();
-    return true;
+    true
 }
 
 pub fn copy_file(source: &str, destination: &str) {

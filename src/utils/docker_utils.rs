@@ -9,7 +9,7 @@ use std::{
 use crate::objects::structs::ComposeSpec;
 pub fn dry_run_generate_compose(filename: String, compose_config: ComposeSpec) {
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
-    let base_path = format!("./{}", filename).to_string().to_owned();
+    let base_path = format!("./{filename}").to_string().to_owned();
     let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
 }
@@ -22,18 +22,18 @@ pub fn generate_compose(
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
-        create_dir_all(format!("{}", compose_directory)).unwrap();
-        println!("Directory created:{}", compose_directory);
+        create_dir_all(compose_directory).unwrap();
+        println!("Directory created:{compose_directory}");
     } else {
-        println!("Directory already exists: {}", compose_directory);
+        println!("Directory already exists: {compose_directory}");
     }
-    let base_path = format!("{}/{}", compose_directory, filename)
+    let base_path = format!("{compose_directory}/{filename}")
         .to_string()
         .to_owned();
     let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
-    println!("Generating Compose for {} Complete", stack_name);
-    return base_path;
+    println!("Generating Compose for {stack_name} Complete");
+    base_path
 }
 
 pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
@@ -54,8 +54,8 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                 thread::spawn(move || {
                     for line in reader.lines() {
                         match line {
-                            Ok(line) => println!("{}", line), // Print each line of stdout
-                            Err(e) => eprintln!("Error reading stdout: {}", e),
+                            Ok(line) => println!("{line}"), // Print each line of stdout
+                            Err(e) => eprintln!("Error reading stdout: {e}"),
                         }
                     }
                 })
@@ -69,8 +69,8 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                 thread::spawn(move || {
                     for line in reader.lines() {
                         match line {
-                            Ok(line) => eprintln!("ERROR: {}", line), // Print each line of stderr
-                            Err(e) => eprintln!("Error reading stderr: {}", e),
+                            Ok(line) => eprintln!("ERROR: {line}"), // Print each line of stderr
+                            Err(e) => eprintln!("Error reading stderr: {e}"),
                         }
                     }
                 })
@@ -87,18 +87,18 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                     if status.success() {
                         true
                     } else {
-                        eprintln!("Command exited with status: {}", status);
+                        eprintln!("Command exited with status: {status}");
                         false
                     }
                 }
                 Err(e) => {
-                    eprintln!("Failed to wait for the command: {}", e);
+                    eprintln!("Failed to wait for the command: {e}");
                     false
                 }
             }
         }
         Err(e) => {
-            eprintln!("Failed to execute command '{}': {}", command, e);
+            eprintln!("Failed to execute command '{command}': {e}");
             false
         }
     }
