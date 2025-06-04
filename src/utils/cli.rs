@@ -57,4 +57,6 @@ pub enum HikariCommands {
     Daemon,
     /// Run hikari in Server Mode
     Server,
+    /// Run hikari in Agent Mode
+    Agent,
 }
