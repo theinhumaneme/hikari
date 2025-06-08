@@ -32,6 +32,7 @@ pkgs.mkShellNoCC {
     rust-analyzer
     cargo-bump
     sqlx-cli
+    cargo-cross
 
     lolcat
     cowsay
