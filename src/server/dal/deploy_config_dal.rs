@@ -38,7 +38,8 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
             FROM deploy_config AS dc
             LEFT JOIN compose_stack AS cs
             ON cs.deployment_id = dc.id
-            GROUP BY dc.id, dc.client, dc.environment, dc.solution;
+            GROUP BY dc.id, dc.client, dc.environment, dc.solution
+            ORDER BY dc.id;
             "#,
         )
         .fetch_all(&self.pool)
@@ -117,16 +118,14 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
     }
 
     async fn delete(&self, id: i64) -> Result<bool, Error> {
-        let row = query(
-            r#"DELETE FROM deploy_config WHERE id=$1 RETURNING id, client, environment, solution;"#,
-        )
-        .bind(id)
-        .execute(&self.pool)
-        .await
-        .map_err(|err| {
-            error!("Database query failed: {err}");
-            err
-        })?;
+        let row = query(r#"DELETE FROM deploy_config WHERE id=$1;"#)
+            .bind(id)
+            .execute(&self.pool)
+            .await
+            .map_err(|err| {
+                error!("Database query failed: {err}");
+                err
+            })?;
         Ok(row.rows_affected() > 0)
     }
 }

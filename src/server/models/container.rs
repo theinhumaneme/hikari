@@ -2,6 +2,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ContainerDTO {
+    pub id: Option<i64>,
+    pub stack_id: i64,
+    pub service_name: String,
     pub container_name: String,
     pub image: String,
     pub restart: String,

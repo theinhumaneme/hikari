@@ -8,8 +8,12 @@ use sqlx::{PgPool, postgres::PgPoolOptions};
 use tokio::net::TcpListener;
 
 use crate::{
-    server::api::deployments::{
-        delete_deployment, get_all_deployments, get_deployment, post_deployment, update_deployment,
+    server::api::{
+        compose_stack::{delete_stack, get_all_stacks, get_stack, post_stack, update_stack},
+        deployments::{
+            delete_deployment, get_all_deployments, get_deployment, post_deployment,
+            update_deployment,
+        },
     },
     utils::secrets::load_secrets,
 };
@@ -43,6 +47,11 @@ pub async fn server_mode() {
         .route("/deployment", post(post_deployment))
         .route("/deployment", put(update_deployment))
         .route("/deployment", delete(delete_deployment))
+        .route("/stacks", get(get_all_stacks))
+        .route("/stack", get(get_stack))
+        .route("/stack", post(post_stack))
+        .route("/stack", put(update_stack))
+        .route("/stack", delete(delete_stack))
         .layer(Extension(shared_state));
 
     // run our app with hyper, listening globally on port 3000

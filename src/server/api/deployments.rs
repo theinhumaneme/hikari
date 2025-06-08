@@ -95,9 +95,6 @@ pub async fn update_deployment(
     Extension(state): Extension<Arc<AppState>>,
     payload: Json<DeployConfigDTO>,
 ) -> Result<Json<DeployConfigDTO>, (StatusCode, String)> {
-    if payload.id.is_none() {
-        return Err((StatusCode::BAD_REQUEST, "id field not found".to_string()));
-    }
     let deploy_config_dal = DeployConfigDAL::new(&state.pool);
     let record_exists = deploy_config_dal
         .exists(payload.id.unwrap())
@@ -166,26 +163,24 @@ pub async fn delete_deployment(
             format!("Deployment of ID - {id} not found"),
         ));
     }
-
-    let deployment = deploy_config_dal.find_by_id(id).await.unwrap();
-    let _deleted = deploy_config_dal
-        .delete(id)
-        .await
-        .map(|value| {
-            if value {
-                Ok(Json(deployment))
-            } else {
-                Err((StatusCode::BAD_REQUEST, "lorem ipsum"))
-            }
-        })
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        });
-    Err((
-        StatusCode::BAD_REQUEST,
-        format!("Unable to delete Deployment ID - {id}"),
-    ))
+    let deployment = deploy_config_dal.find_by_id(id).await.map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal server error".to_string(),
+        )
+    })?;
+    let deleted = deploy_config_dal.delete(id).await.map_err(|_| {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            "Internal server error".to_string(),
+        )
+    })?;
+    if deleted {
+        Ok(Json(deployment))
+    } else {
+        Err((
+            StatusCode::BAD_REQUEST,
+            "Unable to delete deployment".to_string(),
+        ))
+    }
 }
