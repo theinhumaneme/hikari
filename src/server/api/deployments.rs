@@ -73,7 +73,13 @@ pub async fn post_deployment(
     }
     let deploy_config_dal = DeployConfigDAL::new(&state.pool);
     let deployment = deploy_config_dal
-        .create(&payload.client, &payload.environment, &payload.solution)
+        .create(DeployConfigDTO {
+            id: payload.id,
+            client: payload.client.clone(),
+            environment: payload.environment.clone(),
+            solution: payload.solution.clone(),
+            stack_ids: payload.stack_ids.clone(),
+        })
         .await
         .map_err(|_err| {
             (
@@ -109,12 +115,13 @@ pub async fn update_deployment(
         ));
     }
     let updated: bool = deploy_config_dal
-        .update(
-            payload.id.unwrap(),
-            &payload.client,
-            &payload.environment,
-            &payload.solution,
-        )
+        .update(DeployConfigDTO {
+            id: payload.id,
+            client: payload.client.clone(),
+            environment: payload.environment.clone(),
+            solution: payload.solution.clone(),
+            stack_ids: payload.stack_ids.clone(),
+        })
         .await
         .map_err(|_err| {
             (

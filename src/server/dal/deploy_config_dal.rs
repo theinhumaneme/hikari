@@ -6,8 +6,9 @@ use crate::server::{models::deploy_config::DeployConfigDTO, traits::model::DataR
 pub struct DeployConfigDAL {
     pub pool: PgPool,
 }
-
 impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
+    type Payload = DeployConfigDTO;
+
     fn new(pool: &PgPool) -> Self {
         Self { pool: pool.clone() }
     }
@@ -78,18 +79,13 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(deployment)
     }
 
-    async fn create(
-        &self,
-        client: &str,
-        environment: &str,
-        solution: &str,
-    ) -> Result<DeployConfigDTO, Error> {
+    async fn create(&self, object: DeployConfigDTO) -> Result<DeployConfigDTO, Error> {
         let row = query!(
             "INSERT INTO deploy_config(client, environment, solution
             ) VALUES ($1, $2, $3) RETURNING id, client, environment, solution;",
-            client,
-            environment,
-            solution
+            object.client,
+            object.environment,
+            object.solution
         )
         .fetch_one(&self.pool)
         .await
@@ -106,19 +102,13 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         })
     }
 
-    async fn update(
-        &self,
-        id: i64,
-        client: &str,
-        environment: &str,
-        solution: &str,
-    ) -> Result<bool, Error> {
+    async fn update(&self, object: DeployConfigDTO) -> Result<bool, Error> {
         let row= query(
             r#"UPDATE deploy_config SET client=$2, environment=$3, solution=$4 WHERE id=$1 RETURNING id, client, environment, solution;"#).bind(
-            id).
-            bind(client).
-        bind(environment).
-            bind(solution).execute(&self.pool)
+            object.id).
+            bind(object.client).
+        bind(object.environment).
+            bind(object.solution).execute(&self.pool)
         .await.map_err(|err| {
             error!("Database query failed: {err}");
             err
