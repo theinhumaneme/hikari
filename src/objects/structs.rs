@@ -43,9 +43,10 @@ impl Validate for HikariConfig {
         validate_field!(self.version, "version");
 
         for (index, config) in self.deploy_configs.iter().enumerate() {
-            config.1.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_configs[{index}]: {e}"))
-            })?;
+            config
+                .1
+                .validate()
+                .map_err(|e| ConfigError::MissingField(format!("deploy_configs[{index}]: {e}")))?;
         }
 
         Ok(())
@@ -70,9 +71,9 @@ impl Validate for DeployConfig {
         }
 
         for (index, stack) in self.deploy_stacks.iter().enumerate() {
-            stack.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_stacks[{index}]: {e}"))
-            })?;
+            stack
+                .validate()
+                .map_err(|e| ConfigError::MissingField(format!("deploy_stacks[{index}]: {e}")))?;
         }
 
         Ok(())

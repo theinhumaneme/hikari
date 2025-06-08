@@ -18,9 +18,7 @@ pub fn manage_node(
             || current_deploy_config.environment != environment
             || current_deploy_config.solution != solution
         {
-            println!(
-                "Skipping config '{key}' as it does not match the node parameters."
-            );
+            println!("Skipping config '{key}' as it does not match the node parameters.");
             continue;
         }
         // get the incoming config w.r.t to current config by key
@@ -47,9 +45,7 @@ pub fn manage_node(
             }
         } else {
             // Config is removed (not in incoming_config)
-            println!(
-                "Config '{key}' has been removed. Stopping associated stacks..."
-            );
+            println!("Config '{key}' has been removed. Stopping associated stacks...");
             current_deploy_config
                 .deploy_stacks
                 .iter()
@@ -67,9 +63,7 @@ pub fn manage_node(
             || incoming_deploy_config.environment != environment
             || incoming_deploy_config.solution != solution
         {
-            println!(
-                "Skipping new config '{key}' as it does not match the node parameters."
-            );
+            println!("Skipping new config '{key}' as it does not match the node parameters.");
             continue;
         }
 
@@ -96,9 +90,7 @@ pub fn manage_node(
             }
         } else {
             // Handle new deploy configurations
-            println!(
-                "New Deploy Config '{key}' found. Starting associated stacks..."
-            );
+            println!("New Deploy Config '{key}' found. Starting associated stacks...");
             incoming_deploy_config
                 .deploy_stacks
                 .iter()
