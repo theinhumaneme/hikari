@@ -1,0 +1,21 @@
+meta {
+  name: updateStack
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{host}}/stack
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 4,
+    "deployment_id": 26,
+    "stack_name": "hikari",
+    "filename": "hikari",
+    "home_directory": "hikari"
+  }
+}

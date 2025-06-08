@@ -1,0 +1,15 @@
+meta {
+  name: deleteStack
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{host}}/stack?id=4
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: 4
+}

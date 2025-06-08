@@ -1,0 +1,20 @@
+meta {
+  name: postStack
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/stack
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "deployment_id": 26,
+    "stack_name": "hello",
+    "filename": "hello",
+    "home_directory": "hello"
+  }
+}
