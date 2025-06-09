@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::error::ConfigError;
+use crate::{server::models::container::ContainerDTO, utils::error::ConfigError};
 
 pub trait Validate {
     fn validate(&self) -> Result<(), ConfigError>;
@@ -156,5 +156,26 @@ impl Validate for Container {
         validate_field!(self.image, "image");
         validate_field!(self.restart, "restart");
         Ok(())
+    }
+}
+impl From<ContainerDTO> for Container {
+    fn from(dto: ContainerDTO) -> Self {
+        Self {
+            container_name: dto.container_name,
+            image: dto.image,
+            restart: dto.restart,
+            user: dto.user,
+            stdin_open: dto.stdin_open,
+            tty: dto.tty,
+            command: dto.command,
+            pull_policy: dto.pull_policy,
+            ports: dto.ports,
+            volumes: dto.volumes,
+            environment: dto.environment,
+            mem_reservation: dto.mem_reservation,
+            mem_limit: dto.mem_limit,
+            oom_kill_disable: dto.oom_kill_disable,
+            privileged: dto.privileged,
+        }
     }
 }

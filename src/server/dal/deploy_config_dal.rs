@@ -28,6 +28,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
             DeployConfigDTO,
             r#"
             SELECT dc.id,
+            dc.name,
             dc.client,
             dc.environment,
             dc.solution,
@@ -57,6 +58,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
             r#"
             SELECT dc.id,
             dc.client,
+            dc.name,
             dc.environment,
             dc.solution,
             COALESCE(
@@ -82,8 +84,9 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
 
     async fn create(&self, object: DeployConfigDTO) -> Result<DeployConfigDTO, Error> {
         let row = query!(
-            "INSERT INTO deploy_config(client, environment, solution
-            ) VALUES ($1, $2, $3) RETURNING id, client, environment, solution;",
+            "INSERT INTO deploy_config(name, client, environment, solution
+            ) VALUES ($1, $2, $3, $4) RETURNING id, name, client, environment, solution;",
+            object.name,
             object.client,
             object.environment,
             object.solution
@@ -96,6 +99,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         })?;
         Ok(DeployConfigDTO {
             id: Some(row.id),
+            name: row.name,
             client: row.client,
             environment: row.environment,
             solution: row.solution,
@@ -105,8 +109,9 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
 
     async fn update(&self, object: DeployConfigDTO) -> Result<bool, Error> {
         let row = query!(
-            r#"UPDATE deploy_config SET client=$2, environment=$3, solution=$4 WHERE id=$1;"#,
+            r#"UPDATE deploy_config SET name = $2, client=$3, environment=$4, solution=$5 WHERE id=$1;"#,
             object.id,
+            object.name,
             object.client,
             object.environment,
             object.solution
@@ -129,5 +134,84 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
                 err
             })?;
         Ok(row.rows_affected() > 0)
+    }
+}
+pub trait Utils {
+    async fn find_by_metadata(
+        &self,
+        client: &str,
+        environment: &str,
+        solution: &str,
+    ) -> Result<Vec<DeployConfigDTO>, Error>;
+    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, Error>;
+}
+impl Utils for DeployConfigDAL {
+    async fn find_by_metadata(
+        &self,
+        client: &str,
+        environment: &str,
+        solution: &str,
+    ) -> Result<Vec<DeployConfigDTO>, Error> {
+        let deployments: Vec<DeployConfigDTO> = query_as!(
+            DeployConfigDTO,
+            r#"
+            SELECT dc.id,
+            dc.client,
+            dc.name,
+            dc.environment,
+            dc.solution,
+            COALESCE(
+                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),
+                ARRAY[]::BIGINT[]
+            ) AS stack_ids
+            FROM deploy_config AS dc
+            LEFT JOIN compose_stack AS cs
+            ON cs.deployment_id = dc.id
+            WHERE dc.client = $1 AND dc.environment = $2 AND dc.solution = $3
+            GROUP BY dc.id, dc.client, dc.environment, dc.solution
+            ORDER BY dc.id;
+            "#,
+            client,
+            environment,
+            solution,
+        )
+        .fetch_all(&self.pool)
+        .await
+        .map_err(|err| {
+            error!("Database query failed: {err}");
+            err
+        })?;
+        Ok(deployments)
+    }
+
+    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, Error> {
+        let deployment: DeployConfigDTO = query_as!(
+            DeployConfigDTO,
+            r#"
+            SELECT dc.id,
+            dc.name,
+            dc.client,
+            dc.environment,
+            dc.solution,
+            COALESCE(
+                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),
+                ARRAY[]::BIGINT[]
+            ) AS stack_ids
+            FROM deploy_config AS dc
+            LEFT JOIN compose_stack AS cs
+            ON cs.deployment_id = dc.id
+            WHERE dc.name = $1
+            GROUP BY dc.id, dc.client, dc.environment, dc.solution
+            ORDER BY dc.id;
+            "#,
+            name
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!("Database query failed: {err}");
+            err
+        })?;
+        Ok(deployment)
     }
 }

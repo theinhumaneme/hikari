@@ -17,6 +17,7 @@ use crate::{
             delete_deployment, get_all_deployments, get_deployment, post_deployment,
             update_deployment,
         },
+        hikari::{get_hikari_by_metadata, get_hikari_by_name},
     },
     utils::secrets::load_secrets,
 };
@@ -60,6 +61,8 @@ pub async fn server_mode() {
         .route("/api/v1/container", post(post_container))
         .route("/api/v1/container", put(update_container))
         .route("/api/v1/container", delete(delete_container))
+        .route("/api/v1/hikari/metadata", get(get_hikari_by_metadata))
+        .route("/api/v1/hikari/name", get(get_hikari_by_name))
         .layer(Extension(shared_state));
 
     // run our app with hyper, listening globally on port 3000
