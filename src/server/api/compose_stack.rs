@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, debug_handler, extract::Query};
-use log::info;
 use reqwest::StatusCode;
 use serde::Deserialize;
 
@@ -11,6 +10,7 @@ use crate::{
         dal::{deploy_config_dal::DeployConfigDAL, stack_config_dal::StackConfigDAL},
         models::stack_config::StackConfigDTO,
         traits::model::DataRepository,
+        utils::utils::map_db_error,
     },
 };
 
@@ -19,13 +19,7 @@ pub async fn get_all_stacks(
     Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<Vec<StackConfigDTO>>, (StatusCode, String)> {
     let stack_config_dal = StackConfigDAL::new(&state.pool);
-    let value = stack_config_dal.find_all().await.map_err(|_err| {
-        info!("Unable to fetch stacks");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "INTERNAL SERVER ERROR".to_string(),
-        )
-    })?;
+    let value = stack_config_dal.find_all().await.map_err(map_db_error)?;
     Ok(Json(value))
 }
 #[derive(Deserialize)]
@@ -39,26 +33,10 @@ pub async fn get_stack(
     Query(QueryParams { id }): Query<QueryParams>,
 ) -> Result<Json<StackConfigDTO>, (StatusCode, String)> {
     let stack_config_dal = StackConfigDAL::new(&state.pool);
-
-    let record_exists = stack_config_dal.exists(id).await.map_err(|_err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "INTERNAL SERVER ERROR".to_string(),
-        )
-    })?;
-    if !record_exists {
-        return Err((
-            StatusCode::NOT_FOUND,
-            format!("Stack of ID - {id} not found"),
-        ));
-    }
-    let value = stack_config_dal.find_by_id(id).await.map_err(|_err| {
-        info!("Unable to find Stack by ID {id}");
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "INTERNAL SERVER ERROR".to_string(),
-        )
-    })?;
+    let value = stack_config_dal
+        .find_by_id(id)
+        .await
+        .map_err(map_db_error)?;
     Ok(Json(value))
 }
 
@@ -77,12 +55,7 @@ pub async fn post_stack(
     let deployment_exists = deploy_config_dal
         .exists(payload.deployment_id)
         .await
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     if !deployment_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -100,12 +73,7 @@ pub async fn post_stack(
             containers: payload.containers.clone(),
         })
         .await
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     Ok(Json(stack))
 }
 
@@ -118,12 +86,7 @@ pub async fn update_stack(
     let deployment_exists = deploy_config_dal
         .exists(payload.deployment_id)
         .await
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     if !deployment_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -134,12 +97,7 @@ pub async fn update_stack(
     let record_exists = stack_config_dal
         .exists(payload.id.unwrap())
         .await
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -156,23 +114,13 @@ pub async fn update_stack(
             containers: payload.containers.clone(),
         })
         .await
-        .map_err(|_err| {
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     if updated {
         stack_config_dal
             .find_by_id(payload.id.unwrap())
             .await
             .map(Json)
-            .map_err(|_err| {
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "INTERNAL SERVER ERROR".to_string(),
-                )
-            })
+            .map_err(map_db_error)
     } else {
         Err((
             StatusCode::BAD_REQUEST,
@@ -187,12 +135,7 @@ pub async fn delete_stack(
     Query(QueryParams { id }): Query<QueryParams>,
 ) -> Result<Json<StackConfigDTO>, (StatusCode, String)> {
     let stack_config_dal = StackConfigDAL::new(&state.pool);
-    let record_exists = stack_config_dal.exists(id).await.map_err(|_err| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "INTERNAL SERVER ERROR".to_string(),
-        )
-    })?;
+    let record_exists = stack_config_dal.exists(id).await.map_err(map_db_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -200,18 +143,11 @@ pub async fn delete_stack(
         ));
     }
 
-    let stack = stack_config_dal.find_by_id(id).await.map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Internal server error".to_string(),
-        )
-    })?;
-    let deleted = stack_config_dal.delete(id).await.map_err(|_| {
-        (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "Internal server error".to_string(),
-        )
-    })?;
+    let stack = stack_config_dal
+        .find_by_id(id)
+        .await
+        .map_err(map_db_error)?;
+    let deleted = stack_config_dal.delete(id).await.map_err(map_db_error)?;
     if deleted {
         Ok(Json(stack))
     } else {
