@@ -1,0 +1,21 @@
+meta {
+  name: postContainer
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/container
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "stack_id": 6,
+    "container_name": "hello",
+    "service_name": "hello",
+    "image": "hello",
+    "restart": "hello"
+  }
+}
