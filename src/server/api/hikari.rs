@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::sync::Arc;
 
 use axum::{Extension, Json, debug_handler, extract::Query};
 use log::info;
@@ -7,15 +7,15 @@ use serde::Deserialize;
 
 use crate::{
     mode::server::AppState,
-    objects::structs::{ComposeSpec, Container, DeployConfig, HikariConfig, StackConfig, Validate},
+    objects::structs::HikariConfig,
     server::{
         dal::{
             container_dal::ContainerDAL,
             deploy_config_dal::{DeployConfigDAL, Utils},
             stack_config_dal::StackConfigDAL,
         },
-        models::deploy_config::DeployConfigDTO,
         traits::model::DataRepository,
+        utils::utils::build_hikari_config,
     },
 };
 
@@ -29,71 +29,6 @@ pub struct QueryParamsMetadata {
 #[derive(Deserialize)]
 pub struct QueryParamsName {
     pub name: String,
-}
-
-pub async fn build_hikari_config(
-    deployments: Vec<DeployConfigDTO>,
-    stack_config_dal: StackConfigDAL,
-    container_dal: ContainerDAL,
-) -> Result<HikariConfig, (StatusCode, String)> {
-    let mut deploy_configs: HashMap<String, DeployConfig> = HashMap::new();
-    for deploy_config_dto in deployments {
-        let mut deploy_stacks: Vec<StackConfig> = Vec::new();
-        if let Some(stack_ids) = deploy_config_dto.stack_ids.clone() {
-            for stack_id in stack_ids {
-                let stack_config_dto =
-                    stack_config_dal
-                        .find_by_id(stack_id)
-                        .await
-                        .map_err(|_err| {
-                            (
-                                StatusCode::INTERNAL_SERVER_ERROR,
-                                "INTERNAL SERVER ERROR".to_string(),
-                            )
-                        })?;
-                let mut services: HashMap<String, Container> = HashMap::new();
-                if let Some(container_ids) = stack_config_dto.containers.clone() {
-                    for container_id in container_ids {
-                        let container_dto =
-                            container_dal
-                                .find_by_id(container_id)
-                                .await
-                                .map_err(|_err| {
-                                    (
-                                        StatusCode::INTERNAL_SERVER_ERROR,
-                                        "INTERNAL SERVER ERROR".to_string(),
-                                    )
-                                })?;
-                        let container: Container = container_dto.clone().into();
-                        services.insert(container_dto.service_name, container);
-                    }
-                }
-                deploy_stacks.push(StackConfig {
-                    stack_name: stack_config_dto.stack_name,
-                    filename: stack_config_dto.filename,
-                    home_directory: stack_config_dto.home_directory,
-                    compose_spec: ComposeSpec { services },
-                });
-            }
-        }
-        deploy_configs.insert(
-            deploy_config_dto.name.clone(),
-            DeployConfig {
-                client: deploy_config_dto.client.clone(),
-                environment: deploy_config_dto.client.clone(),
-                solution: deploy_config_dto.client.clone(),
-                deploy_stacks,
-            },
-        );
-    }
-    let hikari = HikariConfig {
-        version: "1".to_string(),
-        deploy_configs,
-    };
-    hikari
-        .validate()
-        .map_err(|_err| (StatusCode::BAD_REQUEST, _err.to_string()))?;
-    Ok(hikari)
 }
 
 #[debug_handler]
