@@ -104,13 +104,16 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
     }
 
     async fn update(&self, object: DeployConfigDTO) -> Result<bool, Error> {
-        let row= query(
-            r#"UPDATE deploy_config SET client=$2, environment=$3, solution=$4 WHERE id=$1 RETURNING id, client, environment, solution;"#).bind(
-            object.id).
-            bind(object.client).
-        bind(object.environment).
-            bind(object.solution).execute(&self.pool)
-        .await.map_err(|err| {
+        let row = query!(
+            r#"UPDATE deploy_config SET client=$2, environment=$3, solution=$4 WHERE id=$1;"#,
+            object.id,
+            object.client,
+            object.environment,
+            object.solution
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
             error!("Database query failed: {err}");
             err
         })?;
@@ -118,8 +121,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
     }
 
     async fn delete(&self, id: i64) -> Result<bool, Error> {
-        let row = query(r#"DELETE FROM deploy_config WHERE id=$1;"#)
-            .bind(id)
+        let row = query!(r#"DELETE FROM deploy_config WHERE id=$1;"#, id)
             .execute(&self.pool)
             .await
             .map_err(|err| {

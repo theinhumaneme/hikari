@@ -10,6 +10,9 @@ use tokio::net::TcpListener;
 use crate::{
     server::api::{
         compose_stack::{delete_stack, get_all_stacks, get_stack, post_stack, update_stack},
+        container::{
+            delete_container, get_all_containers, get_container, post_container, update_container,
+        },
         deployments::{
             delete_deployment, get_all_deployments, get_deployment, post_deployment,
             update_deployment,
@@ -52,6 +55,11 @@ pub async fn server_mode() {
         .route("/stack", post(post_stack))
         .route("/stack", put(update_stack))
         .route("/stack", delete(delete_stack))
+        .route("/containers", get(get_all_containers))
+        .route("/container", get(get_container))
+        .route("/container", post(post_container))
+        .route("/container", put(update_container))
+        .route("/container", delete(delete_container))
         .layer(Extension(shared_state));
 
     // run our app with hyper, listening globally on port 3000

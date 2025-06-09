@@ -15,7 +15,7 @@ pub struct ContainerDTO {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tty: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub command: Option<Option<String>>,
+    pub command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pull_policy: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]

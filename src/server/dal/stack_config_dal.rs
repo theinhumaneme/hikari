@@ -112,22 +112,31 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
     }
 
     async fn update(&self, object: StackConfigDTO) -> Result<bool, Error> {
-        let row= query(
-            r#"UPDATE compose_stack SET deployment_id=$2, stack_name=$3, filename=$4, home_directory=$5 WHERE id=$1 RETURNING id, deployment_id, stack_name, filename, home_directory;"#).bind(
-            object.id).
-            bind(object.deployment_id).
-        bind(object.stack_name).
-            bind(object.filename).bind(object.home_directory).execute(&self.pool)
-        .await.map_err(|err| {
+        let row = query!(
+            r#"UPDATE compose_stack
+            SET deployment_id=$2,
+            stack_name=$3,
+            filename=$4,
+            home_directory=$5
+            WHERE id=$1;"#,
+            object.id,
+            object.deployment_id,
+            object.stack_name,
+            object.filename,
+            object.home_directory
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(|err| {
             error!("Database query failed: {err}");
             err
         })?;
+        dbg!(row.rows_affected());
         Ok(row.rows_affected() > 0)
     }
 
     async fn delete(&self, id: i64) -> Result<bool, Error> {
-        let row = query(r#"DELETE FROM compose_stack WHERE id=$1;"#)
-            .bind(id)
+        let row = query!(r#"DELETE FROM compose_stack WHERE id=$1;"#, id)
             .execute(&self.pool)
             .await
             .map_err(|err| {
