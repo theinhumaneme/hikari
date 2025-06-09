@@ -1,8 +1,10 @@
 CREATE TABLE deploy_config (
     id BIGSERIAL PRIMARY KEY,
+    name TEXT NOT NULL UNIQUE,
     client TEXT NOT NULL,
     environment TEXT NOT NULL,
-    solution TEXT NOT NULL
+    solution TEXT NOT NULL,
+    CONSTRAINT unique_deployment UNIQUE (client, environment, solution)
 );
 
 CREATE TABLE compose_stack (
@@ -10,7 +12,8 @@ CREATE TABLE compose_stack (
     deployment_id BIGINT NOT NULL REFERENCES deploy_config (id) ON DELETE CASCADE,
     stack_name TEXT NOT NULL,
     filename TEXT NOT NULL,
-    home_directory TEXT NOT NULL
+    home_directory TEXT NOT NULL,
+    CONSTRAINT unique_stack UNIQUE (deployment_id, stack_name, filename, home_directory)
 );
 
 CREATE TABLE container (
@@ -32,6 +35,7 @@ CREATE TABLE container (
     mem_limit TEXT,
     oom_kill_disable BOOLEAN,
     privileged BOOLEAN
+    CONSTRAINT unique_container UNIQUE (stack_id,service_name,container_name)
 );
 
 CREATE INDEX idx_compose_stack_deployment_id ON compose_stack (deployment_id);
