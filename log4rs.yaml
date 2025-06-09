@@ -1,0 +1,33 @@
+refresh_rate: 60 seconds
+
+appenders:
+  stdout:
+    kind: console
+    encoder:
+      pattern: "{d} {h}:{m}:{s} {l} [{t}] {m}{n}"
+
+  file:
+    kind: rolling_file
+    path: "app.log"
+    policy:
+      kind: compound
+      trigger:
+        kind: size
+        limit: 10 mb
+      roller:
+        kind: fixed_window
+        base: 1
+        count: 100
+        pattern: "app.{}.log"
+    encoder:
+      pattern: "{d} [{l}] {M} - {m}{n}"
+
+loggers:
+  app::backend:
+    level: debug
+    appenders: [stdout, file]
+    additive: false
+
+root:
+  level: info
+  appenders: [stdout, file]

@@ -15,6 +15,7 @@ use utils::{
 
 #[tokio::main]
 async fn main() {
+    let _ = log4rs::init_file("log4rs.yaml", Default::default());
     let cli = HikariCli::parse();
 
     match &cli.command {
