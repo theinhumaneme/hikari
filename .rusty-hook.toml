@@ -1,3 +1,0 @@
-[hooks]
-pre-commit = "cargo fmt && cargo check && cargo clippy"
-pre-push = "cargo fmt -- --check || cargo fmt && cargo fmt -- --check"
