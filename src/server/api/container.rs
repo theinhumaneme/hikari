@@ -7,10 +7,10 @@ use serde::Deserialize;
 use crate::{
     mode::server::AppState,
     server::{
+        common::map_db_error,
         dal::{container_dal::ContainerDAL, stack_config_dal::StackConfigDAL},
         models::container::ContainerDTO,
         traits::model::DataRepository,
-        utils::utils::map_db_error,
     },
 };
 

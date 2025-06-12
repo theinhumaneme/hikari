@@ -9,13 +9,13 @@ use crate::{
     mode::server::AppState,
     objects::structs::HikariConfig,
     server::{
+        common::build_hikari_config,
         dal::{
             container_dal::ContainerDAL,
             deploy_config_dal::{DeployConfigDAL, Utils},
             stack_config_dal::StackConfigDAL,
         },
         traits::model::DataRepository,
-        utils::utils::build_hikari_config,
     },
 };
 

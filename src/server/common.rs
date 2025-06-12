@@ -14,31 +14,31 @@ use crate::{
 };
 
 pub fn map_db_error(e: Error) -> (StatusCode, String) {
-    error!("{}", e);
+    error!("{e}");
     match e {
         Error::Database(db_err) => {
             if db_err.is_unique_violation() {
                 let c = db_err.constraint().unwrap_or("unknown");
                 return (
                     StatusCode::CONFLICT,
-                    format!("Duplicate entry: `{}` constraint", c),
+                    format!("Duplicate entry: `{c}` constraint"),
                 );
             }
             if db_err.is_foreign_key_violation() {
                 let c = db_err.constraint().unwrap_or("unknown");
                 return (
                     StatusCode::CONFLICT,
-                    format!("Foreign key violation: `{}` constraint", c),
+                    format!("Foreign key violation: `{c}` constraint"),
                 );
             }
             if db_err.is_check_violation() {
                 let c = db_err.constraint().unwrap_or("unknown");
                 return (
                     StatusCode::BAD_REQUEST,
-                    format!("Check violation: `{}` constraint", c),
+                    format!("Check violation: `{c}` constraint"),
                 );
             }
-            return (StatusCode::INTERNAL_SERVER_ERROR, "Database error".into());
+            (StatusCode::INTERNAL_SERVER_ERROR, "Database error".into())
         }
         Error::RowNotFound => (StatusCode::NOT_FOUND, "Record not found".into()),
 
@@ -55,15 +55,15 @@ pub fn map_db_error(e: Error) -> (StatusCode, String) {
 
         Error::TypeNotFound { type_name } => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Type not found: {}", type_name),
+            format!("Type not found: {type_name}"),
         ),
         Error::ColumnNotFound(col) => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Column not found: {}", col),
+            format!("Column not found: {col}"),
         ),
         Error::ColumnIndexOutOfBounds { index, len } => (
             StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Column index out of bounds: {}/{}", index, len),
+            format!("Column index out of bounds: {index}/{len}"),
         ),
         _ => (
             StatusCode::INTERNAL_SERVER_ERROR,
