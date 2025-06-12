@@ -34,7 +34,7 @@ CREATE TABLE container (
     mem_reservation TEXT,
     mem_limit TEXT,
     oom_kill_disable BOOLEAN,
-    privileged BOOLEAN
+    privileged BOOLEAN,
     CONSTRAINT unique_container UNIQUE (stack_id,service_name,container_name)
 );
 

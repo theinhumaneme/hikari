@@ -3,7 +3,6 @@
 debug/
 target/
 persist/
-.sqlx/
 result/
 releases/
 *.log
