@@ -9,9 +9,11 @@ rust-version = "1.86.0"
 readme = "README.md"
 
 [dependencies]
-axum = { version = "0.8.4", features = ["http2", "macros"] }
+axum = { version = "0.8.4", features = ["http2", "macros", "ws"] }
 clap = { version = "4.5.21", features = ["derive"] }
 dotenvy = "0.15.7"
+futures = "0.3.31"
+futures-util = "0.3.31"
 log = "0.4.27"
 log4rs = "1.3.0"
 openssl = { version = "0.10.68", features = ["vendored"] }
