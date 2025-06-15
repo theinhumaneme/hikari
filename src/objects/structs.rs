@@ -89,7 +89,7 @@ pub struct StackConfig {
 
 impl Validate for StackConfig {
     fn validate(&self) -> Result<(), ConfigError> {
-        validate_field!(self.filename, "name");
+        validate_field!(self.stack_name, "name");
         validate_field!(self.filename, "filename");
         validate_field!(self.home_directory, "home_directory");
         self.compose_spec.validate()?;
