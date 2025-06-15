@@ -38,6 +38,14 @@ pub fn load_secrets(mode: &str) -> Vec<String> {
             );
             vec![pg_user, pg_pass, pg_host, pg_port, pg_db]
         }
+        "agent" => {
+            let hikari_server: String = std::env::var("HIKARI_SERVER_DOMAIN").expect(
+                "HIKARI_SERVER_DOMAIN must
+            be set.",
+            );
+            vec![hikari_server]
+        }
+
         _ => {
             warn!("Secrets Could Not be loaded as no MODE configured");
             vec![]

@@ -4,6 +4,7 @@ mod server;
 mod utils;
 
 use clap::Parser;
+use log::info;
 use mode::{daemon::daemon_mode, server::server_mode};
 use utils::{
     cli::{HikariCli, HikariCommands},
@@ -13,9 +14,13 @@ use utils::{
     secrets::load_secrets,
 };
 
+use crate::mode::agent::agent_mode;
+
 #[tokio::main]
 async fn main() {
     let _ = log4rs::init_file("log4rs.yaml", Default::default());
+    info!("Hikari Booting Up!");
+    let (main_config, update_options) = load_config();
     let cli = HikariCli::parse();
 
     match &cli.command {
@@ -46,14 +51,12 @@ async fn main() {
             }
         },
         HikariCommands::Daemon => loop {
-            let (main_config, update_options) = load_config();
             let keys = load_secrets("daemon");
             daemon_mode(&main_config, &update_options, &keys[1]);
         },
         HikariCommands::Server => {
-            load_secrets("server");
             server_mode().await;
         }
-        HikariCommands::Agent => {}
+        HikariCommands::Agent => agent_mode(&main_config).await,
     }
 }
