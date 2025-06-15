@@ -45,7 +45,5 @@ pkgs.mkShellNoCC {
 
   shellHook = ''
     echo $GREETING | cowsay | lolcat
-    cargo check
-    cargo clippy
   '';
 }

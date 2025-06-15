@@ -68,7 +68,7 @@ pub async fn post_stack(
             id: payload.id,
             deployment_id: payload.deployment_id,
             stack_name: payload.stack_name.clone(),
-            filename: payload.stack_name.clone(),
+            filename: payload.filename.clone(),
             home_directory: payload.home_directory.clone(),
             containers: payload.containers.clone(),
         })

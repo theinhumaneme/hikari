@@ -109,8 +109,8 @@ pub async fn build_hikari_config(
             deploy_config_dto.name.clone(),
             DeployConfig {
                 client: deploy_config_dto.client.clone(),
-                environment: deploy_config_dto.client.clone(),
-                solution: deploy_config_dto.client.clone(),
+                environment: deploy_config_dto.environment.clone(),
+                solution: deploy_config_dto.solution.clone(),
                 deploy_stacks,
             },
         );
