@@ -53,6 +53,10 @@ pub enum HikariCommands {
         )]
         input_file: String,
     },
-    /// Run hikari in Daemon Mode
+    /// Run hikari in Daemon Mode (Standalone Mode)
     Daemon,
+    /// Run hikari in Server Mode
+    Server,
+    /// Run hikari in Agent Mode
+    Agent,
 }

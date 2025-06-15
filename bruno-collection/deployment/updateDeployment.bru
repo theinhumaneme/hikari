@@ -1,0 +1,21 @@
+meta {
+  name: updateDeployment
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{host}}/api/v1/deployment
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 6,
+    "name": "hikari",
+    "client": "hikari",
+    "environment": "hikari",
+    "solution": "hikari"
+  }
+}

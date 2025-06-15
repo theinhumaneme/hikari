@@ -1,0 +1,17 @@
+meta {
+  name: getHikariConfigurationByMetadata
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/api/v1/hikari/metadata?client=hikari&environment=hikari&solution=hikari
+  body: none
+  auth: inherit
+}
+
+params:query {
+  client: hikari
+  environment: hikari
+  solution: hikari
+}

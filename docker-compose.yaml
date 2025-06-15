@@ -1,0 +1,15 @@
+# Use postgres/example user/password credentials
+
+services:
+  db:
+    image: postgres:17
+    restart: always
+    shm_size: 128mb
+    environment:
+      POSTGRES_USER: hikari
+      POSTGRES_PASSWORD: hikari
+      POSTGRES_DB: hikari
+    volumes:
+      - ./persist:/var/lib/postgresql/data
+    ports:
+      - 5432:5432

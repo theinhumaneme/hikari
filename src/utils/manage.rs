@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::{
-    objects::structs::{HikariConfig, NodeConfig, StackConfig},
+    objects::structs::{DeployConfig, HikariConfig, StackConfig},
     utils::docker_utils::{generate_compose, start_compose, stop_compose},
 };
 
@@ -18,10 +18,7 @@ pub fn manage_node(
             || current_deploy_config.environment != environment
             || current_deploy_config.solution != solution
         {
-            println!(
-                "Skipping config '{}' as it does not match the node parameters.",
-                key
-            );
+            println!("Skipping config '{key}' as it does not match the node parameters.");
             continue;
         }
         // get the incoming config w.r.t to current config by key
@@ -33,8 +30,7 @@ pub fn manage_node(
             {
                 // Values differ but still match the node; restart stacks
                 println!(
-                    "Config '{}' parameters have changed, config no longer matches the node, Stopping associated stacks...",
-                    key
+                    "Config '{key}' parameters have changed, config no longer matches the node, Stopping associated stacks..."
                 );
                 current_deploy_config
                     .deploy_stacks
@@ -49,10 +45,7 @@ pub fn manage_node(
             }
         } else {
             // Config is removed (not in incoming_config)
-            println!(
-                "Config '{}' has been removed. Stopping associated stacks...",
-                key
-            );
+            println!("Config '{key}' has been removed. Stopping associated stacks...");
             current_deploy_config
                 .deploy_stacks
                 .iter()
@@ -70,10 +63,7 @@ pub fn manage_node(
             || incoming_deploy_config.environment != environment
             || incoming_deploy_config.solution != solution
         {
-            println!(
-                "Skipping new config '{}' as it does not match the node parameters.",
-                key
-            );
+            println!("Skipping new config '{key}' as it does not match the node parameters.");
             continue;
         }
 
@@ -85,8 +75,7 @@ pub fn manage_node(
                 || incoming_deploy_config.solution != *current_deploy_config.solution
             {
                 println!(
-                    "Changes detected in config '{}'. client/environment/solution now match the node parameters, Starting associated stacks...",
-                    key
+                    "Changes detected in config '{key}'. client/environment/solution now match the node parameters, Starting associated stacks..."
                 );
                 incoming_deploy_config
                     .deploy_stacks
@@ -97,14 +86,11 @@ pub fn manage_node(
                     });
             } else {
                 // No changes detected
-                println!("No changes detected for config '{}'. Skipping.", key);
+                println!("No changes detected for config '{key}'. Skipping.");
             }
         } else {
             // Handle new deploy configurations
-            println!(
-                "New Deploy Config '{}' found. Starting associated stacks...",
-                key
-            );
+            println!("New Deploy Config '{key}' found. Starting associated stacks...");
             incoming_deploy_config
                 .deploy_stacks
                 .iter()
@@ -115,7 +101,7 @@ pub fn manage_node(
     }
 }
 
-fn compare_stacks(current_deploy_config: &NodeConfig, incoming_deploy_config: &NodeConfig) {
+fn compare_stacks(current_deploy_config: &DeployConfig, incoming_deploy_config: &DeployConfig) {
     // check if any stack has been deleted
     let current_stacks: HashMap<String, &StackConfig> = current_deploy_config
         .deploy_stacks
@@ -194,7 +180,7 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
             }
         }
         _ => {
-            println!("invalid operation {}", operation);
+            println!("invalid operation {operation}");
             false
         }
     }
