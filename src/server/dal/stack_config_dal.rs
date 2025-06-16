@@ -165,7 +165,6 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
             error!("Database query failed: {err}");
             err
         })?;
-        dbg!(row.rows_affected());
         Ok(row.rows_affected() > 0)
     }
 
