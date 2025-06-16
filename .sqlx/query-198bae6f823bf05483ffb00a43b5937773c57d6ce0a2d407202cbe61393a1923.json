@@ -1,0 +1,31 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        UPDATE container SET\n        stack_id = $2,\n        service_name = $3,\n        container_name = $4,\n        image = $5,\n        restart = $6,\n        \"user\" = $7,\n        stdin_open = $8,\n        tty = $9,\n        command = $10,\n        pull_policy = $11,\n        ports = $12,\n        volumes = $13,\n        environment = $14,\n        mem_reservation = $15,\n        mem_limit = $16,\n        oom_kill_disable = $17,\n        privileged = $18\n        WHERE id = $1;\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "198bae6f823bf05483ffb00a43b5937773c57d6ce0a2d407202cbe61393a1923"
+}

@@ -11,6 +11,7 @@ use crate::{
         dal::{deploy_config_dal::DeployConfigDAL, stack_config_dal::StackConfigDAL},
         models::stack_config::StackConfigDTO,
         traits::model::DataRepository,
+        ws::websocket::broadcast,
     },
 };
 
@@ -74,6 +75,19 @@ pub async fn post_stack(
         })
         .await
         .map_err(map_db_error)?;
+    let deployment = stack_config_dal
+        .get_deployment_metadata(stack.id.unwrap())
+        .await
+        .map_err(map_db_error)?;
+    tokio::spawn(async move {
+        broadcast(
+            state,
+            deployment.client,
+            deployment.solution,
+            deployment.environment,
+        )
+        .await
+    });
     Ok(Json(stack))
 }
 
@@ -82,6 +96,9 @@ pub async fn update_stack(
     Extension(state): Extension<Arc<AppState>>,
     payload: Json<StackConfigDTO>,
 ) -> Result<Json<StackConfigDTO>, (StatusCode, String)> {
+    if payload.id.is_none() {
+        return Err((StatusCode::BAD_REQUEST, "Expected field - id".to_string()));
+    }
     let deploy_config_dal = DeployConfigDAL::new(&state.pool);
     let deployment_exists = deploy_config_dal
         .exists(payload.deployment_id)
@@ -104,6 +121,17 @@ pub async fn update_stack(
             format!("Stack of ID - {} not found", payload.id.unwrap()),
         ));
     }
+    if payload.0
+        == stack_config_dal
+            .find_by_id(payload.id.unwrap())
+            .await
+            .map_err(map_db_error)?
+    {
+        return Err((
+            StatusCode::NOT_MODIFIED,
+            format!("Deployment of ID - {} is not modified", payload.id.unwrap()),
+        ));
+    }
     let updated: bool = stack_config_dal
         .update(StackConfigDTO {
             id: payload.id,
@@ -116,6 +144,19 @@ pub async fn update_stack(
         .await
         .map_err(map_db_error)?;
     if updated {
+        let deployment = stack_config_dal
+            .get_deployment_metadata(payload.id.unwrap())
+            .await
+            .map_err(map_db_error)?;
+        tokio::spawn(async move {
+            broadcast(
+                state,
+                deployment.client,
+                deployment.solution,
+                deployment.environment,
+            )
+            .await
+        });
         stack_config_dal
             .find_by_id(payload.id.unwrap())
             .await
@@ -149,6 +190,19 @@ pub async fn delete_stack(
         .map_err(map_db_error)?;
     let deleted = stack_config_dal.delete(id).await.map_err(map_db_error)?;
     if deleted {
+        let deployment = stack_config_dal
+            .get_deployment_metadata(id)
+            .await
+            .map_err(map_db_error)?;
+        tokio::spawn(async move {
+            broadcast(
+                state,
+                deployment.client,
+                deployment.solution,
+                deployment.environment,
+            )
+            .await
+        });
         Ok(Json(stack))
     } else {
         Err((

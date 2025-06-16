@@ -26,10 +26,10 @@ pub struct NodeConfig {
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct NodeUpdateOptions {
-    pub remote_url: String,
-    pub poll_interval: String,
-    pub encrypted_file_path: String,
-    pub decrypted_file_path: String,
+    pub remote_url: Option<String>,
+    pub poll_interval: Option<String>,
+    pub encrypted_file_path: Option<String>,
+    pub decrypted_file_path: Option<String>,
     pub reference_file_path: String,
 }
 

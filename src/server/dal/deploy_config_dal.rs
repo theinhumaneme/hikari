@@ -57,8 +57,38 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
             DeployConfigDTO,
             r#"
             SELECT dc.id,
-            dc.client,
             dc.name,
+            dc.client,
+            dc.environment,
+            dc.solution,
+            COALESCE(
+                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),
+                ARRAY[]::BIGINT[]
+            ) AS stack_ids
+            FROM deploy_config AS dc
+            LEFT JOIN compose_stack AS cs
+            ON cs.deployment_id = dc.id
+            WHERE dc.id = $1
+            GROUP BY dc.id, dc.client, dc.environment, dc.solution;
+            "#,
+            id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!("Database query failed: {err}");
+            err
+        })?;
+        Ok(deployment)
+    }
+
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+        let deployment: DeployConfigDTO = query_as!(
+            DeployConfigDTO,
+            r#"
+            SELECT dc.id,
+            dc.name,
+            dc.client,
             dc.environment,
             dc.solution,
             COALESCE(
@@ -156,8 +186,8 @@ impl Utils for DeployConfigDAL {
             DeployConfigDTO,
             r#"
             SELECT dc.id,
-            dc.client,
             dc.name,
+            dc.client,
             dc.environment,
             dc.solution,
             COALESCE(

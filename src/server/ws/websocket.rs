@@ -47,7 +47,7 @@ pub async fn broadcast(
             .or_insert_with(|| channel(100).0)
             .clone()
     };
-    sender.send("deployment ready".to_string())?;
+    sender.send("DEPLOYMENT UPDATED".to_string())?;
     Ok(())
 }
 
@@ -58,7 +58,7 @@ pub async fn handle_socket(
     solution: String,
     environment: String,
 ) {
-    let (mut ws_tx, ws_rx) = socket.split();
+    let (mut ws_tx, _ws_rx) = socket.split();
 
     let sender = {
         let mut map = state.channel_map.write().await;
@@ -77,10 +77,4 @@ pub async fn handle_socket(
             }
         }
     });
-
-    // Immediately broadcast each incoming message
-    // while let Some(Ok(Message::Text(text_bytes))) = ws_rx.next().await {
-    //     let text: String = text_bytes.to_string();
-    //     let _ = sender.send(text);
-    // }
 }

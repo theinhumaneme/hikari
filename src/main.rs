@@ -57,6 +57,6 @@ async fn main() {
         HikariCommands::Server => {
             server_mode().await;
         }
-        HikariCommands::Agent => agent_mode(&main_config).await,
+        HikariCommands::Agent => agent_mode(&main_config, &update_options).await,
     }
 }

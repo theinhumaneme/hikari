@@ -9,6 +9,7 @@ use crate::{
     server::{
         common::map_db_error, dal::deploy_config_dal::DeployConfigDAL,
         models::deploy_config::DeployConfigDTO, traits::model::DataRepository,
+        ws::websocket::broadcast,
     },
 };
 
@@ -61,6 +62,16 @@ pub async fn post_deployment(
         })
         .await
         .map_err(map_db_error)?;
+    let deployment_temp = deployment.clone();
+    tokio::spawn(async move {
+        broadcast(
+            state,
+            deployment_temp.client,
+            deployment_temp.solution,
+            deployment_temp.environment,
+        )
+        .await
+    });
     Ok(Json(deployment))
 }
 
@@ -69,6 +80,9 @@ pub async fn update_deployment(
     Extension(state): Extension<Arc<AppState>>,
     payload: Json<DeployConfigDTO>,
 ) -> Result<Json<DeployConfigDTO>, (StatusCode, String)> {
+    if payload.id.is_none() {
+        return Err((StatusCode::BAD_REQUEST, "Expected field - id".to_string()));
+    }
     let deploy_config_dal = DeployConfigDAL::new(&state.pool);
     let record_exists = deploy_config_dal
         .exists(payload.id.unwrap())
@@ -80,6 +94,21 @@ pub async fn update_deployment(
             format!("Deployment of ID - {} not found", payload.id.unwrap()),
         ));
     }
+    if payload.0
+        == deploy_config_dal
+            .find_by_id(payload.id.unwrap())
+            .await
+            .map_err(map_db_error)?
+    {
+        return Err((
+            StatusCode::NOT_MODIFIED,
+            format!("Deployment of ID - {} is not modified", payload.id.unwrap()),
+        ));
+    }
+    let deployment = deploy_config_dal
+        .get_deployment_metadata(payload.id.unwrap())
+        .await
+        .map_err(map_db_error)?;
     let updated: bool = deploy_config_dal
         .update(DeployConfigDTO {
             id: payload.id,
@@ -92,6 +121,23 @@ pub async fn update_deployment(
         .await
         .map_err(map_db_error)?;
     if updated {
+        let temp_payload = payload.clone();
+        tokio::spawn(async move {
+            let _ = broadcast(
+                state.clone(),
+                temp_payload.client.clone(),
+                temp_payload.solution.clone(),
+                temp_payload.environment.clone(),
+            )
+            .await;
+            let _ = broadcast(
+                state,
+                deployment.client,
+                deployment.solution,
+                deployment.environment,
+            )
+            .await;
+        });
         deploy_config_dal
             .find_by_id(payload.id.unwrap())
             .await
@@ -124,6 +170,16 @@ pub async fn delete_deployment(
         .map_err(map_db_error)?;
     let deleted = deploy_config_dal.delete(id).await.map_err(map_db_error)?;
     if deleted {
+        let deployment_temp = deployment.clone();
+        tokio::spawn(async move {
+            broadcast(
+                state,
+                deployment_temp.client,
+                deployment_temp.solution,
+                deployment_temp.environment,
+            )
+            .await
+        });
         Ok(Json(deployment))
     } else {
         Err((

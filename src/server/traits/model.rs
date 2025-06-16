@@ -1,5 +1,7 @@
 use sqlx::{Error, PgPool};
 
+use crate::server::models::deploy_config::DeployConfigDTO;
+
 pub trait DataRepository<T> {
     type Payload;
 
@@ -9,6 +11,6 @@ pub trait DataRepository<T> {
     async fn find_all(&self) -> Result<Vec<T>, Error>;
     async fn create(&self, payload: Self::Payload) -> Result<T, Error>;
     async fn update(&self, payload: Self::Payload) -> Result<bool, Error>;
-
     async fn delete(&self, id: i64) -> Result<bool, Error>;
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error>;
 }

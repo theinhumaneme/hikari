@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use axum::{Extension, Json, debug_handler, extract::Query};
-use log::info;
 use reqwest::StatusCode;
 use serde::Deserialize;
 
@@ -9,7 +8,7 @@ use crate::{
     mode::server::AppState,
     objects::structs::HikariConfig,
     server::{
-        common::build_hikari_config,
+        common::{build_hikari_config, map_db_error},
         dal::{
             container_dal::ContainerDAL,
             deploy_config_dal::{DeployConfigDAL, Utils},
@@ -46,13 +45,7 @@ pub async fn get_hikari_by_metadata(
     let deployments = deploy_config_dal
         .find_by_metadata(&client, &environment, &solution)
         .await
-        .map_err(|_err| {
-            info!("Unable to fetch deployments");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     let hikari = build_hikari_config(deployments, stack_config_dal, container_dal).await?;
     Ok(Json(hikari))
 }
@@ -68,13 +61,7 @@ pub async fn get_hikari_by_name(
     let deployment = deploy_config_dal
         .find_by_name(&name)
         .await
-        .map_err(|_err| {
-            info!("Unable to fetch deployments");
-            (
-                StatusCode::INTERNAL_SERVER_ERROR,
-                "INTERNAL SERVER ERROR".to_string(),
-            )
-        })?;
+        .map_err(map_db_error)?;
     let hikari = build_hikari_config(vec![deployment], stack_config_dal, container_dal).await?;
     Ok(Json(hikari))
 }

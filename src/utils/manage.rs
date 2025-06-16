@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::{
     objects::structs::{DeployConfig, HikariConfig, StackConfig},
-    utils::docker_utils::{generate_compose, start_compose, stop_compose},
+    utils::docker_utils::{generate_compose, pull_compose, start_compose, stop_compose},
 };
 
 pub fn manage_node(
@@ -168,6 +168,16 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
                 &stack.filename,
                 &stack.compose_spec,
             );
+            match pull_compose(&stack_filepath) {
+                true => {
+                    println!("Successfully pulled added stack {}", stack.stack_name);
+                }
+                false => {
+                    println!("Could not pull added stack {}", stack.stack_name);
+                    return false;
+                }
+            }
+
             match start_compose(&stack_filepath) {
                 true => {
                     println!("Successfully started added stack {}", stack.stack_name);

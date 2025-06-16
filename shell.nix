@@ -27,15 +27,9 @@ pkgs.mkShellNoCC {
         ];
       }
     ))
-
-    # Keep the rest of your tools as before
     rust-analyzer
     cargo-bump
     sqlx-cli
-    cargo-cross
-
-    lolcat
-    cowsay
     docker
     docker-buildx
     docker-compose
@@ -44,6 +38,6 @@ pkgs.mkShellNoCC {
   GREETING = "Hikari Development Environment Activated!";
 
   shellHook = ''
-    echo $GREETING | cowsay | lolcat
+    echo $GREETING
   '';
 }

@@ -1,0 +1,124 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT *\n            FROM container AS c\n            WHERE c.id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "stack_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "service_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "container_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "restart",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "user",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "stdin_open",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "tty",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "command",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "pull_policy",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "ports",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "volumes",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 13,
+        "name": "environment",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 14,
+        "name": "mem_reservation",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "mem_limit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "oom_kill_disable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 17,
+        "name": "privileged",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "ce3ef0a55fe85c254a8c3a27e71018d2d2ee37998c86d455e6d8325c38b1b01f"
+}

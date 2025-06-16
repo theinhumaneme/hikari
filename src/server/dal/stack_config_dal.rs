@@ -1,7 +1,10 @@
 use log::error;
 use sqlx::{Error, PgPool, query, query_as, query_scalar};
 
-use crate::server::{models::stack_config::StackConfigDTO, traits::model::DataRepository};
+use crate::server::{
+    models::{deploy_config::DeployConfigDTO, stack_config::StackConfigDTO},
+    traits::model::DataRepository,
+};
 
 pub struct StackConfigDAL {
     pub pool: PgPool,
@@ -80,6 +83,37 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
             err
         })?;
         Ok(compose_stack)
+    }
+
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+        let deployment: DeployConfigDTO = query_as!(
+            DeployConfigDTO,
+            r#"
+            SELECT
+            dc.id,
+            dc.name,
+            dc.client,
+            dc.environment,
+            dc.solution,
+            COALESCE(
+                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),
+                ARRAY[]::BIGINT[]
+            ) AS stack_ids
+            FROM compose_stack AS cs
+            JOIN deploy_config AS dc
+            ON cs.deployment_id = dc.id
+            WHERE cs.id = $1
+            GROUP BY dc.id, dc.client, dc.environment, dc.solution;
+            "#,
+            id
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(|err| {
+            error!("Database query failed: {err}");
+            err
+        })?;
+        Ok(deployment)
     }
 
     async fn create(&self, object: StackConfigDTO) -> Result<StackConfigDTO, Error> {

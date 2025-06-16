@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT dc.id,\n            dc.name,\n            dc.client,\n            dc.environment,\n            dc.solution,\n            COALESCE(\n                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),\n                ARRAY[]::BIGINT[]\n            ) AS stack_ids\n            FROM deploy_config AS dc\n            LEFT JOIN compose_stack AS cs\n            ON cs.deployment_id = dc.id\n            GROUP BY dc.id, dc.client, dc.environment, dc.solution\n            ORDER BY dc.id;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "client",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "environment",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "solution",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "stack_ids",
+        "type_info": "Int8Array"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "b23a957b9eee98f2e7902f598a4bd8465634e2ec14d114bb0f5256be6461420b"
+}

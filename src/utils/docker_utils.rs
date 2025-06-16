@@ -104,6 +104,17 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
     }
 }
 
+pub fn pull_compose(compose_file_path: &str) -> bool {
+    dbg!(&compose_file_path);
+    let command = "docker";
+    let args = ["compose", "-f", compose_file_path, "pull"];
+    if Path::exists(Path::new(compose_file_path)) {
+        return execute_command(command, args.to_vec());
+    }
+    eprintln!("compose file does not exist");
+    false
+}
+
 pub fn start_compose(compose_file_path: &str) -> bool {
     dbg!(&compose_file_path);
     let command = "docker";

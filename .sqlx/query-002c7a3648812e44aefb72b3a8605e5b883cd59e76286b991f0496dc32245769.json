@@ -1,0 +1,140 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO\n            container(\n            stack_id,\n            service_name,\n            container_name,\n            image,\n            restart,\n            \"user\",\n            stdin_open,\n            tty,\n            command,\n            pull_policy,\n            ports,\n            volumes,\n            environment,\n            mem_reservation,\n            mem_limit,\n            oom_kill_disable,\n            privileged\n            )\n            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)\n            RETURNING\n            id,\n            stack_id,\n            service_name,\n            container_name,\n            image,\n            restart,\n            \"user\",\n            stdin_open,\n            tty,\n            command,\n            pull_policy,\n            ports,\n            volumes,\n            environment,\n            mem_reservation,\n            mem_limit,\n            oom_kill_disable,\n            privileged\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "stack_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "service_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "container_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "image",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "restart",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "user",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 7,
+        "name": "stdin_open",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "tty",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 9,
+        "name": "command",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "pull_policy",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "ports",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "volumes",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 13,
+        "name": "environment",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 14,
+        "name": "mem_reservation",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 15,
+        "name": "mem_limit",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 16,
+        "name": "oom_kill_disable",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 17,
+        "name": "privileged",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool",
+        "Text",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray",
+        "Text",
+        "Text",
+        "Bool",
+        "Bool"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "002c7a3648812e44aefb72b3a8605e5b883cd59e76286b991f0496dc32245769"
+}
