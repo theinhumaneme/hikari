@@ -1,5 +1,5 @@
 use futures::StreamExt;
-use log::info;
+use log::{error, info};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use crate::{
@@ -29,7 +29,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
     {
         Ok(reference) => incoming_config = reference,
         Err(e) => {
-            eprintln!("Error loading initial configuration: {e}");
+            error!("Error loading initial configuration: {e}");
         }
     }
 
@@ -50,7 +50,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
             );
         }
         Err(e) => {
-            eprintln!("Error loading reference configuration: {e}");
+            error!("Error loading reference configuration: {e}");
         }
     }
 
@@ -63,8 +63,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
     )
     .await
     .expect("failed to connect to websocket");
-
-    println!("Connected to {}", secrets[0]);
+    info!("Connected to {}", secrets[0]);
 
     let (mut _ws_tx, mut ws_rx) = ws_stream.split();
 
@@ -85,7 +84,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
                     {
                         Ok(config) => incoming_config = config,
                         Err(e) => {
-                            eprintln!("Error loading initial configuration: {e}");
+                            error!("Error loading initial configuration: {e}");
                         }
                     }
 
@@ -106,7 +105,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
                             );
                         }
                         Err(e) => {
-                            eprintln!("Error loading reference configuration: {e}");
+                            error!("Error loading reference configuration: {e}");
                         }
                     }
                 }
@@ -114,7 +113,7 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
             Message::Binary(_bin) => { /* ignore */ }
             Message::Ping(_) | Message::Pong(_) => { /* ignore heartbeats */ }
             Message::Close(_frame) => {
-                println!("Server Closed Connection");
+                error!("Server Closed Connection");
                 break;
             }
             _ => {}

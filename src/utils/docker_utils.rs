@@ -6,6 +6,8 @@ use std::{
     thread,
 };
 
+use log::{error, info};
+
 use crate::objects::structs::ComposeSpec;
 pub fn dry_run_generate_compose(filename: String, compose_config: ComposeSpec) {
     let yaml = serde_yaml::to_string(&compose_config).unwrap();
@@ -23,16 +25,16 @@ pub fn generate_compose(
     if !Path::new(&compose_directory).exists() {
         // Create the folder if it doesn't exist
         create_dir_all(compose_directory).unwrap();
-        println!("Directory created:{compose_directory}");
+        info!("Directory created:{compose_directory}");
     } else {
-        println!("Directory already exists: {compose_directory}");
+        info!("Directory already exists: {compose_directory}");
     }
     let base_path = format!("{compose_directory}/{filename}")
         .to_string()
         .to_owned();
     let mut file = File::create(&base_path).unwrap();
     file.write_all(yaml.as_bytes()).unwrap();
-    println!("Generating Compose for {stack_name} Complete");
+    info!("Generating Compose for {stack_name} Complete");
     base_path
 }
 
@@ -54,8 +56,8 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                 thread::spawn(move || {
                     for line in reader.lines() {
                         match line {
-                            Ok(line) => println!("{line}"), // Print each line of stdout
-                            Err(e) => eprintln!("Error reading stdout: {e}"),
+                            Ok(line) => info!("{line}"), // Print each line of stdout
+                            Err(e) => error!("Error reading stdout: {e}"),
                         }
                     }
                 })
@@ -69,8 +71,8 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                 thread::spawn(move || {
                     for line in reader.lines() {
                         match line {
-                            Ok(line) => eprintln!("ERROR: {line}"), // Print each line of stderr
-                            Err(e) => eprintln!("Error reading stderr: {e}"),
+                            Ok(line) => error!("ERROR: {line}"), // Print each line of stderr
+                            Err(e) => error!("Error reading stderr: {e}"),
                         }
                     }
                 })
@@ -87,18 +89,18 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                     if status.success() {
                         true
                     } else {
-                        eprintln!("Command exited with status: {status}");
+                        error!("Command exited with status: {status}");
                         false
                     }
                 }
                 Err(e) => {
-                    eprintln!("Failed to wait for the command: {e}");
+                    error!("Failed to wait for the command: {e}");
                     false
                 }
             }
         }
         Err(e) => {
-            eprintln!("Failed to execute command '{command}': {e}");
+            error!("Failed to execute command '{command}': {e}");
             false
         }
     }
@@ -111,7 +113,7 @@ pub fn pull_compose(compose_file_path: &str) -> bool {
     if Path::exists(Path::new(compose_file_path)) {
         return execute_command(command, args.to_vec());
     }
-    eprintln!("compose file does not exist");
+    error!("compose file does not exist");
     false
 }
 
@@ -122,7 +124,7 @@ pub fn start_compose(compose_file_path: &str) -> bool {
     if Path::exists(Path::new(compose_file_path)) {
         return execute_command(command, args.to_vec());
     }
-    eprintln!("compose file does not exist");
+    error!("compose file does not exist");
     false
 }
 pub fn stop_compose(compose_file_path: &str) -> bool {
@@ -132,6 +134,6 @@ pub fn stop_compose(compose_file_path: &str) -> bool {
     if Path::exists(Path::new(compose_file_path)) {
         return execute_command(command, args.to_vec());
     }
-    eprintln!("compose file does not exist");
+    error!("compose file does not exist");
     false
 }

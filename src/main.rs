@@ -4,7 +4,7 @@ mod server;
 mod utils;
 
 use clap::Parser;
-use log::info;
+use log::{error, info};
 use mode::{daemon::daemon_mode, server::server_mode};
 use utils::{
     cli::{HikariCli, HikariCommands},
@@ -47,7 +47,7 @@ async fn main() {
                 }
             }
             Err(e) => {
-                eprintln!("Error loading configuration: {e}");
+                error!("Error loading configuration: {e}");
             }
         },
         HikariCommands::Daemon => loop {

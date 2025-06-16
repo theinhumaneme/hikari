@@ -60,28 +60,31 @@ pub fn daemon_mode(
                                         );
                                     }
                                     Err(e) => {
-                                        eprintln!("Error loading reference configuration: {e}");
+                                        error!("Error loading reference configuration: {e}");
                                     }
                                 }
                             } else {
-                                eprintln!(
+                                error!(
+                                    " Incoming `Hikari Config` version does not match with `Node` version`"
+                                );
+                                error!(
                                     " Incoming `Hikari Config` version does not match with `Node` version`"
                                 );
                                 exit(1);
                             }
                         }
                         Err(e) => {
-                            eprintln!("Error loading configuration: {e}");
+                            error!("Error loading configuration: {e}");
                         }
                     }
                 }
                 _ => {
-                    println!("Error Occured")
+                    error!("Error Occured")
                 }
             }
         }
         false => {
-            println!("Unable to Download the file");
+            error!("Unable to Download the file");
         }
     }
     let poll_interval = &node_update_config.poll_interval.as_ref().unwrap();

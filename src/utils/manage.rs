@@ -1,5 +1,7 @@
 use std::collections::HashMap;
 
+use log::{error, info};
+
 use crate::{
     objects::structs::{DeployConfig, HikariConfig, StackConfig},
     utils::docker_utils::{generate_compose, pull_compose, start_compose, stop_compose},
@@ -18,7 +20,7 @@ pub fn manage_node(
             || current_deploy_config.environment != environment
             || current_deploy_config.solution != solution
         {
-            println!("Skipping config '{key}' as it does not match the node parameters.");
+            info!("Skipping config '{key}' as it does not match the node parameters.");
             continue;
         }
         // get the incoming config w.r.t to current config by key
@@ -29,14 +31,14 @@ pub fn manage_node(
                 || current_deploy_config.solution != incoming_deploy_config.solution
             {
                 // Values differ but still match the node; restart stacks
-                println!(
+                info!(
                     "Config '{key}' parameters have changed, config no longer matches the node, Stopping associated stacks..."
                 );
                 current_deploy_config
                     .deploy_stacks
                     .iter()
                     .for_each(|stack| {
-                        println!("Stopping Stack {}", stack.stack_name);
+                        info!("Stopping Stack {}", stack.stack_name);
                         manage_stack(stack, "stop");
                     });
             } else {
@@ -45,12 +47,12 @@ pub fn manage_node(
             }
         } else {
             // Config is removed (not in incoming_config)
-            println!("Config '{key}' has been removed. Stopping associated stacks...");
+            info!("Config '{key}' has been removed. Stopping associated stacks...");
             current_deploy_config
                 .deploy_stacks
                 .iter()
                 .for_each(|stack| {
-                    println!("Stopping Stack {}", stack.stack_name);
+                    info!("Stopping Stack {}", stack.stack_name);
                     manage_stack(stack, "stop");
                 });
         }
@@ -63,7 +65,7 @@ pub fn manage_node(
             || incoming_deploy_config.environment != environment
             || incoming_deploy_config.solution != solution
         {
-            println!("Skipping new config '{key}' as it does not match the node parameters.");
+            info!("Skipping new config '{key}' as it does not match the node parameters.");
             continue;
         }
 
@@ -74,23 +76,23 @@ pub fn manage_node(
                 || incoming_deploy_config.environment != *current_deploy_config.environment
                 || incoming_deploy_config.solution != *current_deploy_config.solution
             {
-                println!(
+                info!(
                     "Changes detected in config '{key}'. client/environment/solution now match the node parameters, Starting associated stacks..."
                 );
                 incoming_deploy_config
                     .deploy_stacks
                     .iter()
                     .for_each(|stack| {
-                        println!("Starting Stack {}", stack.stack_name);
+                        info!("Starting Stack {}", stack.stack_name);
                         manage_stack(stack, "start");
                     });
             } else {
                 // No changes detected
-                println!("No changes detected for config '{key}'. Skipping.");
+                info!("No changes detected for config '{key}'. Skipping.");
             }
         } else {
             // Handle new deploy configurations
-            println!("New Deploy Config '{key}' found. Starting associated stacks...");
+            info!("New Deploy Config '{key}' found. Starting associated stacks...");
             incoming_deploy_config
                 .deploy_stacks
                 .iter()
@@ -122,20 +124,20 @@ fn compare_stacks(current_deploy_config: &DeployConfig, incoming_deploy_config: 
         .cloned()
         .collect();
     removed_stacks.iter().for_each(|stack| {
-        println!("Stopping stack {}", stack.stack_name);
+        info!("Stopping stack {}", stack.stack_name);
         let _ = manage_stack(stack, "stop");
     });
     for (stack_name, incoming_stack) in &incoming_stacks {
         if let Some(current_stack) = current_stacks.get(stack_name) {
             if current_stack == incoming_stack {
-                println!("{} stack is unchanged", current_stack.stack_name);
+                info!("{} stack is unchanged", current_stack.stack_name);
                 continue;
             } else {
-                println!("changes detected in stack {}", current_stack.stack_name);
-                println!("Stopping stack {}", current_stack.stack_name);
+                info!("changes detected in stack {}", current_stack.stack_name);
+                info!("Stopping stack {}", current_stack.stack_name);
                 match manage_stack(current_stack, "stop") {
                     true => {
-                        println!("Starting Stack {}", incoming_stack.stack_name);
+                        info!("Starting Stack {}", incoming_stack.stack_name);
                         manage_stack(incoming_stack, "start");
                     }
                     false => continue,
@@ -152,11 +154,11 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
         "stop" => {
             match stop_compose(format!("{}/{}", stack.home_directory, stack.filename).as_str()) {
                 true => {
-                    println!("Successfully stopped removed stack {}", stack.stack_name);
+                    info!("Successfully stopped removed stack {}", stack.stack_name);
                     true
                 }
                 false => {
-                    println!("Could not stop removed stack {}", stack.stack_name);
+                    error!("Could not stop removed stack {}", stack.stack_name);
                     false
                 }
             }
@@ -170,27 +172,27 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
             );
             match pull_compose(&stack_filepath) {
                 true => {
-                    println!("Successfully pulled added stack {}", stack.stack_name);
+                    info!("Successfully pulled added stack {}", stack.stack_name);
                 }
                 false => {
-                    println!("Could not pull added stack {}", stack.stack_name);
+                    error!("Could not pull added stack {}", stack.stack_name);
                     return false;
                 }
             }
 
             match start_compose(&stack_filepath) {
                 true => {
-                    println!("Successfully started added stack {}", stack.stack_name);
+                    info!("Successfully started added stack {}", stack.stack_name);
                     true
                 }
                 false => {
-                    println!("Could not start added stack {}", stack.stack_name);
+                    error!("Could not start added stack {}", stack.stack_name);
                     false
                 }
             }
         }
         _ => {
-            println!("invalid operation {operation}");
+            error!("invalid operation {operation}");
             false
         }
     }

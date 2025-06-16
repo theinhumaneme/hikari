@@ -1,9 +1,9 @@
 use std::{fs, path::Path, process::exit};
 
-use serde_json::json;
-
 use super::error::ConfigError;
 use crate::objects::structs::{HikariConfig, NodeConfig, NodeUpdateOptions, Validate};
+use log::{error, info};
+use serde_json::json;
 
 pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
     let mut node_config: NodeConfig = Default::default();
@@ -11,12 +11,12 @@ pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
         node_config = match toml::from_str(fs::read_to_string("node.toml").unwrap().as_str()) {
             Ok(c) => c,
             Err(_) => {
-                eprintln!("Could not load the `node.toml` file ");
+                error!("Could not load the `node.toml` file ");
                 exit(1);
             }
         };
     } else {
-        eprintln!("`node.toml` file does not exist")
+        error!("`node.toml` file does not exist")
     }
     let mut node_update_config: NodeUpdateOptions = Default::default();
     if Path::exists(Path::new("config.toml")) {
@@ -24,15 +24,15 @@ pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
             match toml::from_str(fs::read_to_string("config.toml").unwrap().as_str()) {
                 Ok(c) => c,
                 Err(_) => {
-                    eprintln!("Could not load the `config.toml` file ");
+                    error!("Could not load the `config.toml` file ");
                     exit(1);
                 }
             };
     } else {
-        eprintln!("`config.toml` file does not exist")
+        error!("`config.toml` file does not exist")
     }
     if !Path::new(&node_update_config.reference_file_path).exists() {
-        println!(
+        info!(
             "Looks like hikari is being installed here, generating placeholder {}",
             &node_update_config.reference_file_path
         );
