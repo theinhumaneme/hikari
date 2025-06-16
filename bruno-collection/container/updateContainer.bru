@@ -1,0 +1,22 @@
+meta {
+  name: updateContainer
+  type: http
+  seq: 4
+}
+
+put {
+  url: {{host}}/api/v1/container
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "id": 21,
+    "stack_id": 6,
+    "container_name": "hello",
+    "service_name": "hello",
+    "image": "hello",
+    "restart": "hello"
+  }
+}

@@ -1,0 +1,38 @@
+meta {
+  name: postContainer
+  type: http
+  seq: 3
+}
+
+post {
+  url: {{host}}/api/v1/container
+  body: json
+  auth: inherit
+}
+
+body:json {
+  {
+    "stack_id": 1,
+    "service_name": "nginx-1",
+    "container_name": "nginx-1",
+    "environment": [
+      "HELLO=BYE"
+    ],
+    "image": "nginx",
+    "mem_limit": "1gb",
+    "mem_reservation": "1gb",
+    "oom_kill_disable": true,
+    "ports": [
+      "8080:8080"
+    ],
+    "privileged": false,
+    "pull_policy": "always",
+    "restart": "unless-stopped",
+    "stdin_open": false,
+    "tty": true,
+    "user": "0:0",
+    "volumes": [
+      "/home/kalyanmudumby/Documents/GitHub/hikari:/logs"
+    ]
+  }
+}

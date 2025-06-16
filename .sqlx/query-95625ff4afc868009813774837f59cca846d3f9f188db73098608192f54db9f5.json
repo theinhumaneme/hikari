@@ -1,0 +1,50 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT cs.id,\n            cs.deployment_id,\n            cs.stack_name,\n            cs.filename,\n            cs.home_directory,\n            COALESCE(\n                array_agg(c.id) FILTER (WHERE c.id IS NOT NULL),\n                ARRAY[]::BIGINT[]\n            ) AS containers\n            FROM compose_stack AS cs\n            LEFT JOIN container AS c\n            ON c.stack_id = cs.id\n            GROUP BY cs.id, cs.deployment_id, cs.stack_name, cs.filename, cs.home_directory\n            ORDER BY cs.id;\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "deployment_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 2,
+        "name": "stack_name",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "home_directory",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "containers",
+        "type_info": "Int8Array"
+      }
+    ],
+    "parameters": {
+      "Left": []
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      null
+    ]
+  },
+  "hash": "95625ff4afc868009813774837f59cca846d3f9f188db73098608192f54db9f5"
+}

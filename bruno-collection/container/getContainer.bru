@@ -1,0 +1,15 @@
+meta {
+  name: getContainer
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/api/v1/container?id=5
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: 5
+}

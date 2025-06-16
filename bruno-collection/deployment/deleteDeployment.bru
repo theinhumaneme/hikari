@@ -1,0 +1,15 @@
+meta {
+  name: deleteDeployment
+  type: http
+  seq: 5
+}
+
+delete {
+  url: {{host}}/api/v1/deployment?id=25
+  body: json
+  auth: inherit
+}
+
+params:query {
+  id: 25
+}

@@ -1,0 +1,15 @@
+meta {
+  name: getStack
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/api/v1/stack?id=3
+  body: none
+  auth: inherit
+}
+
+params:query {
+  id: 3
+}

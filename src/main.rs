@@ -1,10 +1,11 @@
 mod mode;
 mod objects;
+mod server;
 mod utils;
 
 use clap::Parser;
-
-use mode::daemon::daemon_mode;
+use log::{error, info};
+use mode::{daemon::daemon_mode, server::server_mode};
 use utils::{
     cli::{HikariCli, HikariCommands},
     config::{load_config, load_hikari_config},
@@ -13,7 +14,13 @@ use utils::{
     secrets::load_secrets,
 };
 
-fn main() {
+use crate::mode::agent::agent_mode;
+
+#[tokio::main]
+async fn main() {
+    let _ = log4rs::init_file("log4rs.yaml", Default::default());
+    info!("Hikari Booting Up!");
+    let (main_config, update_options) = load_config();
     let cli = HikariCli::parse();
 
     match &cli.command {
@@ -21,15 +28,15 @@ fn main() {
             input_file,
             output_file,
         } => {
-            let (public_key_path, _private_key_path) = load_secrets();
-            let _ = encrypt_json(input_file, output_file, &public_key_path);
+            let keys = load_secrets("daemon");
+            let _ = encrypt_json(input_file, output_file, &keys[0]);
         }
         HikariCommands::Decrypt {
             input_file,
             output_file,
         } => {
-            let (_public_key_path, private_key_path) = load_secrets();
-            let _ = decrypt_json(input_file, output_file, &private_key_path);
+            let keys = load_secrets("daemon");
+            let _ = decrypt_json(input_file, output_file, &keys[1]);
         }
         HikariCommands::DryRun { input_file } => match load_hikari_config(input_file) {
             Ok(config) => {
@@ -40,13 +47,16 @@ fn main() {
                 }
             }
             Err(e) => {
-                eprintln!("Error loading configuration: {}", e);
+                error!("Error loading configuration: {e}");
             }
         },
         HikariCommands::Daemon => loop {
-            let (main_config, update_options) = load_config();
-            let (_public_key_path, private_key_path) = load_secrets();
-            daemon_mode(&main_config, &update_options, &private_key_path);
+            let keys = load_secrets("daemon");
+            daemon_mode(&main_config, &update_options, &keys[1]);
         },
+        HikariCommands::Server => {
+            server_mode().await;
+        }
+        HikariCommands::Agent => agent_mode(&main_config, &update_options).await,
     }
 }

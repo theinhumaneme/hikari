@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use serde::{Deserialize, Serialize};
 
-use crate::utils::error::ConfigError;
+use crate::{server::models::container::ContainerDTO, utils::error::ConfigError};
 
 pub trait Validate {
     fn validate(&self) -> Result<(), ConfigError>;
@@ -17,7 +17,7 @@ macro_rules! validate_field {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct MainConfig {
+pub struct NodeConfig {
     pub version: String,
     pub solution: String,
     pub client: String,
@@ -25,27 +25,28 @@ pub struct MainConfig {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct UpdateOptions {
-    pub remote_url: String,
-    pub poll_interval: String,
-    pub encrypted_file_path: String,
-    pub decrypted_file_path: String,
+pub struct NodeUpdateOptions {
+    pub remote_url: Option<String>,
+    pub poll_interval: Option<String>,
+    pub encrypted_file_path: Option<String>,
+    pub decrypted_file_path: Option<String>,
     pub reference_file_path: String,
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct HikariConfig {
     pub version: String,
-    pub deploy_configs: HashMap<String, NodeConfig>,
+    pub deploy_configs: HashMap<String, DeployConfig>,
 }
 impl Validate for HikariConfig {
     fn validate(&self) -> Result<(), ConfigError> {
         validate_field!(self.version, "version");
 
         for (index, config) in self.deploy_configs.iter().enumerate() {
-            config.1.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_configs[{}]: {}", index, e))
-            })?;
+            config
+                .1
+                .validate()
+                .map_err(|e| ConfigError::MissingField(format!("deploy_configs[{index}]: {e}")))?;
         }
 
         Ok(())
@@ -53,13 +54,13 @@ impl Validate for HikariConfig {
 }
 
 #[derive(Default, Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct NodeConfig {
+pub struct DeployConfig {
     pub client: String,
     pub environment: String,
     pub solution: String,
     pub deploy_stacks: Vec<StackConfig>,
 }
-impl Validate for NodeConfig {
+impl Validate for DeployConfig {
     fn validate(&self) -> Result<(), ConfigError> {
         validate_field!(self.client, "client");
         validate_field!(self.environment, "environment");
@@ -70,9 +71,9 @@ impl Validate for NodeConfig {
         }
 
         for (index, stack) in self.deploy_stacks.iter().enumerate() {
-            stack.validate().map_err(|e| {
-                ConfigError::MissingField(format!("deploy_stacks[{}]: {}", index, e))
-            })?;
+            stack
+                .validate()
+                .map_err(|e| ConfigError::MissingField(format!("deploy_stacks[{index}]: {e}")))?;
         }
 
         Ok(())
@@ -112,7 +113,7 @@ impl Validate for ComposeSpec {
         for (name, service) in &self.services {
             service
                 .validate()
-                .map_err(|e| ConfigError::MissingField(format!("service[{}]: {}", name, e)))?;
+                .map_err(|e| ConfigError::MissingField(format!("service[{name}]: {e}")))?;
         }
         Ok(())
     }
@@ -130,7 +131,7 @@ pub struct Container {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tty: Option<bool>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub command: Option<Option<String>>,
+    pub command: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub pull_policy: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -155,5 +156,26 @@ impl Validate for Container {
         validate_field!(self.image, "image");
         validate_field!(self.restart, "restart");
         Ok(())
+    }
+}
+impl From<ContainerDTO> for Container {
+    fn from(dto: ContainerDTO) -> Self {
+        Self {
+            container_name: dto.container_name,
+            image: dto.image,
+            restart: dto.restart,
+            user: dto.user,
+            stdin_open: dto.stdin_open,
+            tty: dto.tty,
+            command: dto.command,
+            pull_policy: dto.pull_policy,
+            ports: dto.ports,
+            volumes: dto.volumes,
+            environment: dto.environment,
+            mem_reservation: dto.mem_reservation,
+            mem_limit: dto.mem_limit,
+            oom_kill_disable: dto.oom_kill_disable,
+            privileged: dto.privileged,
+        }
     }
 }

@@ -1,0 +1,34 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n          dc.client,\n          dc.environment,\n          dc.solution\n        FROM container AS c\n        JOIN compose_stack AS cs\n          ON c.stack_id = cs.id\n        JOIN deploy_config AS dc\n          ON cs.deployment_id = dc.id\n        WHERE c.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "client",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 1,
+        "name": "environment",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "solution",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "6765e39926688311a2dfbae2379c0c93ad3436de70bd6e26b886d41a6bff446b"
+}

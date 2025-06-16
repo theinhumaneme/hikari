@@ -3,9 +3,9 @@ use std::fs;
 use openssl::{
     pkey::{Private, Public},
     rsa::{Padding, Rsa},
-    symm::{decrypt, encrypt, Cipher},
+    symm::{Cipher, decrypt, encrypt},
 };
-use rand::{rngs::OsRng, RngCore};
+use rand::{RngCore, rngs::OsRng};
 use serde_json::Value;
 use thiserror::Error;
 
