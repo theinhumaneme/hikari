@@ -30,7 +30,7 @@ pub fn daemon_mode(
         &node_update_config.remote_url.clone().unwrap(),
         &node_update_config.encrypted_file_path.clone().unwrap(),
     ) {
-        true => {
+        Ok(true) => {
             match decrypt_json(
                 &node_update_config.encrypted_file_path.clone().unwrap(),
                 &node_update_config.decrypted_file_path.clone().unwrap(),
@@ -83,9 +83,10 @@ pub fn daemon_mode(
                 }
             }
         }
-        false => {
+        Ok(false) => {
             error!("Unable to Download the file");
         }
+        _ => {}
     }
     let poll_interval = &node_update_config.poll_interval.as_ref().unwrap();
     thread::sleep(Duration::from_secs(poll_interval.parse().unwrap()));

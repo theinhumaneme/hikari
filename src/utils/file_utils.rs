@@ -3,20 +3,21 @@ use std::{
     io::copy,
 };
 
+use log::error;
 use reqwest::{Error, blocking::Client};
 
 use crate::objects::structs::HikariConfig;
 
-pub fn download_file(file_url: &str, filename: &str) -> bool {
-    let client = Client::builder().build().unwrap();
-    let response = client.get(file_url).send().unwrap();
+pub fn download_file(file_url: &str, filename: &str) -> Result<bool, Error> {
+    let client = Client::builder().build()?;
+    let response = client.get(file_url).send()?;
     if !response.status().is_success() {
-        dbg!(response);
-        return false;
+        return Ok(false);
     }
     let mut file = File::create(filename).unwrap();
-    copy(&mut response.bytes().unwrap().as_ref(), &mut file).unwrap();
-    true
+    let _ = copy(&mut response.bytes()?.as_ref(), &mut file)
+        .map_err(|err| error!("Unable to download the file - Error {err}"));
+    Ok(true)
 }
 
 pub fn copy_file(source: &str, destination: &str) {
