@@ -218,15 +218,15 @@ pub async fn delete_container(
         .find_by_id(id)
         .await
         .map_err(map_repo_error)?;
+    let deployment = container_config_dal
+        .get_deployment_metadata(id)
+        .await
+        .map_err(map_repo_error)?;
     let deleted = container_config_dal
         .delete(id)
         .await
         .map_err(map_repo_error)?;
     if deleted {
-        let deployment = container_config_dal
-            .get_deployment_metadata(id)
-            .await
-            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,

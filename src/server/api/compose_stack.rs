@@ -183,17 +183,16 @@ pub async fn delete_stack(
             format!("Stack of ID - {id} not found"),
         ));
     }
-
+    let deployment = stack_config_dal
+        .get_deployment_metadata(id)
+        .await
+        .map_err(map_repo_error)?;
     let stack = stack_config_dal
         .find_by_id(id)
         .await
         .map_err(map_repo_error)?;
     let deleted = stack_config_dal.delete(id).await.map_err(map_repo_error)?;
     if deleted {
-        let deployment = stack_config_dal
-            .get_deployment_metadata(id)
-            .await
-            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,
