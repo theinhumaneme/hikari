@@ -51,7 +51,7 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
             let stderr = child.stderr.take();
 
             // Thread to handle stdout
-            let stdout_thread = if let Some(stdout) = stdout {
+            let stdout_thread: Option<thread::JoinHandle<()>> = stdout.map(|stdout| {
                 let reader = io::BufReader::new(stdout);
                 thread::spawn(move || {
                     for line in reader.lines() {
@@ -61,12 +61,10 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                         }
                     }
                 })
-            } else {
-                thread::spawn(|| {})
-            };
+            });
 
             // Thread to handle stderr
-            let stderr_thread = if let Some(stderr) = stderr {
+            let stderr_thread: Option<thread::JoinHandle<()>> = stderr.map(|stderr| {
                 let reader = io::BufReader::new(stderr);
                 thread::spawn(move || {
                     for line in reader.lines() {
@@ -76,15 +74,17 @@ pub fn execute_command(command: &str, args: Vec<&str>) -> bool {
                         }
                     }
                 })
-            } else {
-                thread::spawn(|| {})
-            };
+            });
 
             // Wait for the process to finish
             match child.wait() {
                 Ok(status) => {
-                    let _ = stdout_thread.join();
-                    let _ = stderr_thread.join();
+                    if let Some(handle) = stdout_thread {
+                        let _ = handle.join();
+                    }
+                    if let Some(handle) = stderr_thread {
+                        let _ = handle.join();
+                    }
 
                     if status.success() {
                         true
