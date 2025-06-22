@@ -3,8 +3,6 @@ use std::collections::HashMap;
 use log::error;
 use reqwest::StatusCode;
 
-use crate::utils::error::RepoError;
-
 use crate::{
     objects::structs::{ComposeSpec, Container, DeployConfig, HikariConfig, StackConfig, Validate},
     server::{
@@ -12,6 +10,7 @@ use crate::{
         models::deploy_config::DeployConfigDTO,
         traits::model::DataRepository,
     },
+    utils::error::RepoError,
 };
 
 pub fn map_repo_error(e: RepoError) -> (StatusCode, String) {

@@ -11,8 +11,8 @@ use utils::{
     config::{load_config, load_hikari_config},
     crypto::{decrypt_json, encrypt_json},
     docker_utils::dry_run_generate_compose,
-    secrets::load_secrets,
     error::ConfigError,
+    secrets::load_secrets,
 };
 
 use crate::mode::agent::agent_mode;

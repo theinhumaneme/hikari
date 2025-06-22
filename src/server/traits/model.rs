@@ -1,9 +1,6 @@
 use sqlx::PgPool;
 
-use crate::{
-    server::models::deploy_config::DeployConfigDTO,
-    utils::error::RepoError,
-};
+use crate::{server::models::deploy_config::DeployConfigDTO, utils::error::RepoError};
 
 pub trait DataRepository<T> {
     type Payload;
