@@ -8,7 +8,7 @@ use crate::{
     mode::server::AppState,
     objects::structs::HikariConfig,
     server::{
-        common::{build_hikari_config, map_db_error},
+        common::{build_hikari_config, map_repo_error},
         dal::{
             container_dal::ContainerDAL,
             deploy_config_dal::{DeployConfigDAL, Utils},
@@ -45,7 +45,7 @@ pub async fn get_hikari_by_metadata(
     let deployments = deploy_config_dal
         .find_by_metadata(&client, &environment, &solution)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     let hikari = build_hikari_config(deployments, stack_config_dal, container_dal).await?;
     Ok(Json(hikari))
 }
@@ -61,7 +61,7 @@ pub async fn get_hikari_by_name(
     let deployment = deploy_config_dal
         .find_by_name(&name)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     let hikari = build_hikari_config(vec![deployment], stack_config_dal, container_dal).await?;
     Ok(Json(hikari))
 }

@@ -2,7 +2,8 @@ use std::collections::HashMap;
 
 use log::error;
 use reqwest::StatusCode;
-use sqlx::Error;
+
+use crate::utils::error::RepoError;
 
 use crate::{
     objects::structs::{ComposeSpec, Container, DeployConfig, HikariConfig, StackConfig, Validate},
@@ -13,62 +14,60 @@ use crate::{
     },
 };
 
-pub fn map_db_error(e: Error) -> (StatusCode, String) {
+pub fn map_repo_error(e: RepoError) -> (StatusCode, String) {
     error!("{e}");
     match e {
-        Error::Database(db_err) => {
-            if db_err.is_unique_violation() {
-                let c = db_err.constraint().unwrap_or("unknown");
-                return (
-                    StatusCode::CONFLICT,
-                    format!("Duplicate entry: `{c}` constraint"),
-                );
+        RepoError::Db(db_err) => match db_err {
+            sqlx::Error::Database(db_err) => {
+                if db_err.is_unique_violation() {
+                    let c = db_err.constraint().unwrap_or("unknown");
+                    return (
+                        StatusCode::CONFLICT,
+                        format!("Duplicate entry: `{c}` constraint"),
+                    );
+                }
+                if db_err.is_foreign_key_violation() {
+                    let c = db_err.constraint().unwrap_or("unknown");
+                    return (
+                        StatusCode::CONFLICT,
+                        format!("Foreign key violation: `{c}` constraint"),
+                    );
+                }
+                if db_err.is_check_violation() {
+                    let c = db_err.constraint().unwrap_or("unknown");
+                    return (
+                        StatusCode::BAD_REQUEST,
+                        format!("Check violation: `{c}` constraint"),
+                    );
+                }
+                (StatusCode::INTERNAL_SERVER_ERROR, "Database error".into())
             }
-            if db_err.is_foreign_key_violation() {
-                let c = db_err.constraint().unwrap_or("unknown");
-                return (
-                    StatusCode::CONFLICT,
-                    format!("Foreign key violation: `{c}` constraint"),
-                );
-            }
-            if db_err.is_check_violation() {
-                let c = db_err.constraint().unwrap_or("unknown");
-                return (
-                    StatusCode::BAD_REQUEST,
-                    format!("Check violation: `{c}` constraint"),
-                );
-            }
-            (StatusCode::INTERNAL_SERVER_ERROR, "Database error".into())
-        }
-        Error::RowNotFound => (StatusCode::NOT_FOUND, "Record not found".into()),
-
-        Error::Io(err) => (StatusCode::SERVICE_UNAVAILABLE, err.to_string()),
-
-        Error::Protocol(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
-
-        Error::Tls(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()),
-
-        Error::PoolTimedOut => (
-            StatusCode::SERVICE_UNAVAILABLE,
-            "Connection timed out".into(),
-        ),
-
-        Error::TypeNotFound { type_name } => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Type not found: {type_name}"),
-        ),
-        Error::ColumnNotFound(col) => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Column not found: {col}"),
-        ),
-        Error::ColumnIndexOutOfBounds { index, len } => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            format!("Column index out of bounds: {index}/{len}"),
-        ),
-        _ => (
-            StatusCode::INTERNAL_SERVER_ERROR,
-            "INTERNAL SERVER ERROR".into(),
-        ),
+            sqlx::Error::RowNotFound => (StatusCode::NOT_FOUND, "Record not found".into()),
+            sqlx::Error::Io(err) => (StatusCode::SERVICE_UNAVAILABLE, err.to_string()),
+            sqlx::Error::Protocol(msg) => (StatusCode::INTERNAL_SERVER_ERROR, msg),
+            sqlx::Error::Tls(err) => (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()),
+            sqlx::Error::PoolTimedOut => (
+                StatusCode::SERVICE_UNAVAILABLE,
+                "Connection timed out".into(),
+            ),
+            sqlx::Error::TypeNotFound { type_name } => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Type not found: {type_name}"),
+            ),
+            sqlx::Error::ColumnNotFound(col) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Column not found: {col}"),
+            ),
+            sqlx::Error::ColumnIndexOutOfBounds { index, len } => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                format!("Column index out of bounds: {index}/{len}"),
+            ),
+            _ => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "INTERNAL SERVER ERROR".into(),
+            ),
+        },
+        RepoError::Validation(err) => (StatusCode::BAD_REQUEST, err.to_string()),
     }
 }
 
@@ -85,14 +84,14 @@ pub async fn build_hikari_config(
                 let stack_config_dto = stack_config_dal
                     .find_by_id(stack_id)
                     .await
-                    .map_err(map_db_error)?;
+                    .map_err(map_repo_error)?;
                 let mut services: HashMap<String, Container> = HashMap::new();
                 if let Some(container_ids) = stack_config_dto.containers.clone() {
                     for container_id in container_ids {
                         let container_dto = container_dal
                             .find_by_id(container_id)
                             .await
-                            .map_err(map_db_error)?;
+                            .map_err(map_repo_error)?;
                         let container: Container = container_dto.clone().into();
                         services.insert(container_dto.service_name, container);
                     }

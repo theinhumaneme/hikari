@@ -1,7 +1,10 @@
 use log::error;
-use sqlx::{Error, PgPool, query, query_as, query_scalar};
+use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::server::{models::deploy_config::DeployConfigDTO, traits::model::DataRepository};
+use crate::{
+    server::{models::deploy_config::DeployConfigDTO, traits::model::DataRepository},
+    utils::error::RepoError,
+};
 
 pub struct DeployConfigDAL {
     pub pool: PgPool,
@@ -13,7 +16,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Self { pool: pool.clone() }
     }
 
-    async fn exists(&self, id: i64) -> Result<bool, Error> {
+    async fn exists(&self, id: i64) -> Result<bool, RepoError> {
         let exists = query_scalar!(
             "SELECT EXISTS(SELECT id FROM deploy_config WHERE id = $1)",
             id
@@ -23,7 +26,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(exists.unwrap_or(false))
     }
 
-    async fn find_all(&self) -> Result<Vec<DeployConfigDTO>, Error> {
+    async fn find_all(&self) -> Result<Vec<DeployConfigDTO>, RepoError> {
         let deployments: Vec<DeployConfigDTO> = query_as!(
             DeployConfigDTO,
             r#"
@@ -52,7 +55,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(deployments)
     }
 
-    async fn find_by_id(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+    async fn find_by_id(&self, id: i64) -> Result<DeployConfigDTO, RepoError> {
         let deployment: DeployConfigDTO = query_as!(
             DeployConfigDTO,
             r#"
@@ -82,7 +85,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(deployment)
     }
 
-    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, RepoError> {
         let deployment: DeployConfigDTO = query_as!(
             DeployConfigDTO,
             r#"
@@ -112,7 +115,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(deployment)
     }
 
-    async fn create(&self, object: DeployConfigDTO) -> Result<DeployConfigDTO, Error> {
+    async fn create(&self, object: DeployConfigDTO) -> Result<DeployConfigDTO, RepoError> {
         let row = query!(
             "INSERT INTO deploy_config(name, client, environment, solution
             ) VALUES ($1, $2, $3, $4) RETURNING id, name, client, environment, solution;",
@@ -137,7 +140,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         })
     }
 
-    async fn update(&self, object: DeployConfigDTO) -> Result<bool, Error> {
+    async fn update(&self, object: DeployConfigDTO) -> Result<bool, RepoError> {
         let row = query!(
             r#"UPDATE deploy_config SET name = $2, client=$3, environment=$4, solution=$5 WHERE id=$1;"#,
             object.id,
@@ -155,7 +158,7 @@ impl DataRepository<DeployConfigDTO> for DeployConfigDAL {
         Ok(row.rows_affected() > 0)
     }
 
-    async fn delete(&self, id: i64) -> Result<bool, Error> {
+    async fn delete(&self, id: i64) -> Result<bool, RepoError> {
         let row = query!(r#"DELETE FROM deploy_config WHERE id=$1;"#, id)
             .execute(&self.pool)
             .await
@@ -172,8 +175,8 @@ pub trait Utils {
         client: &str,
         environment: &str,
         solution: &str,
-    ) -> Result<Vec<DeployConfigDTO>, Error>;
-    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, Error>;
+    ) -> Result<Vec<DeployConfigDTO>, RepoError>;
+    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, RepoError>;
 }
 impl Utils for DeployConfigDAL {
     async fn find_by_metadata(
@@ -181,7 +184,7 @@ impl Utils for DeployConfigDAL {
         client: &str,
         environment: &str,
         solution: &str,
-    ) -> Result<Vec<DeployConfigDTO>, Error> {
+    ) -> Result<Vec<DeployConfigDTO>, RepoError> {
         let deployments: Vec<DeployConfigDTO> = query_as!(
             DeployConfigDTO,
             r#"
@@ -214,7 +217,7 @@ impl Utils for DeployConfigDAL {
         Ok(deployments)
     }
 
-    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, Error> {
+    async fn find_by_name(&self, name: &str) -> Result<DeployConfigDTO, RepoError> {
         let deployment: DeployConfigDTO = query_as!(
             DeployConfigDTO,
             r#"

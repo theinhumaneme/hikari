@@ -11,3 +11,11 @@ pub enum ConfigError {
     #[error("Failed to parse JSON: {0}")]
     JsonParseError(#[from] serde_json::Error),
 }
+
+#[derive(Debug, Error)]
+pub enum RepoError {
+    #[error(transparent)]
+    Db(#[from] sqlx::Error),
+    #[error(transparent)]
+    Validation(#[from] ConfigError),
+}

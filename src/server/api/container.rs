@@ -7,7 +7,7 @@ use serde::Deserialize;
 use crate::{
     mode::server::AppState,
     server::{
-        common::map_db_error,
+        common::map_repo_error,
         dal::{container_dal::ContainerDAL, stack_config_dal::StackConfigDAL},
         models::container::ContainerDTO,
         traits::model::DataRepository,
@@ -23,7 +23,7 @@ pub async fn get_all_containers(
     let value = container_config_dal
         .find_all()
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     Ok(Json(value))
 }
 #[derive(Deserialize)]
@@ -40,7 +40,7 @@ pub async fn get_container(
     let value = container_config_dal
         .find_by_id(id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     Ok(Json(value))
 }
 
@@ -59,7 +59,7 @@ pub async fn post_container(
     let stack_exists = stack_config_dal
         .exists(payload.stack_id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !stack_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -89,11 +89,11 @@ pub async fn post_container(
             privileged: payload.privileged,
         })
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     let deployment = container_config_dal
         .get_deployment_metadata(container.id.unwrap())
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     tokio::spawn(async move {
         broadcast(
             state,
@@ -118,7 +118,7 @@ pub async fn update_container(
     let stack_exists = stack_config_dal
         .exists(payload.stack_id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !stack_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -129,7 +129,7 @@ pub async fn update_container(
     let record_exists = container_config_dal
         .exists(payload.id.unwrap())
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -140,7 +140,7 @@ pub async fn update_container(
         == container_config_dal
             .find_by_id(payload.id.unwrap())
             .await
-            .map_err(map_db_error)?
+            .map_err(map_repo_error)?
     {
         return Err((
             StatusCode::NOT_MODIFIED,
@@ -170,12 +170,12 @@ pub async fn update_container(
             privileged: payload.privileged,
         })
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if updated {
         let deployment = container_config_dal
             .get_deployment_metadata(payload.id.unwrap())
             .await
-            .map_err(map_db_error)?;
+            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,
@@ -189,7 +189,7 @@ pub async fn update_container(
             .find_by_id(payload.id.unwrap())
             .await
             .map(Json)
-            .map_err(map_db_error)
+            .map_err(map_repo_error)
     } else {
         Err((
             StatusCode::BAD_REQUEST,
@@ -207,7 +207,7 @@ pub async fn delete_container(
     let record_exists = container_config_dal
         .exists(id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -217,16 +217,16 @@ pub async fn delete_container(
     let container = container_config_dal
         .find_by_id(id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     let deleted = container_config_dal
         .delete(id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if deleted {
         let deployment = container_config_dal
             .get_deployment_metadata(id)
             .await
-            .map_err(map_db_error)?;
+            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,

@@ -1,9 +1,12 @@
 use log::error;
-use sqlx::{Error, PgPool, query, query_as, query_scalar};
+use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::server::{
-    models::{container::ContainerDTO, deploy_config::DeployConfigDTO},
-    traits::model::DataRepository,
+use crate::{
+    server::{
+        models::{container::ContainerDTO, deploy_config::DeployConfigDTO},
+        traits::model::DataRepository,
+    },
+    utils::error::RepoError,
 };
 
 pub struct ContainerDAL {
@@ -16,14 +19,14 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         Self { pool: pool.clone() }
     }
 
-    async fn exists(&self, id: i64) -> Result<bool, Error> {
+    async fn exists(&self, id: i64) -> Result<bool, RepoError> {
         let exists = query_scalar!("SELECT EXISTS(SELECT id FROM container WHERE id = $1)", id)
             .fetch_one(&self.pool)
             .await?;
         Ok(exists.unwrap_or(false))
     }
 
-    async fn find_all(&self) -> Result<Vec<ContainerDTO>, Error> {
+    async fn find_all(&self) -> Result<Vec<ContainerDTO>, RepoError> {
         let compose_stacks: Vec<ContainerDTO> = query_as!(
             ContainerDTO,
             r#"
@@ -41,7 +44,7 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         Ok(compose_stacks)
     }
 
-    async fn find_by_id(&self, id: i64) -> Result<ContainerDTO, Error> {
+    async fn find_by_id(&self, id: i64) -> Result<ContainerDTO, RepoError> {
         let compose_stack: ContainerDTO = query_as!(
             ContainerDTO,
             r#"
@@ -60,7 +63,7 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         Ok(compose_stack)
     }
 
-    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, RepoError> {
         let deployment: DeployConfigDTO = query_as!(
             DeployConfigDTO,
             r#"
@@ -92,7 +95,7 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         Ok(deployment)
     }
 
-    async fn create(&self, object: ContainerDTO) -> Result<ContainerDTO, Error> {
+    async fn create(&self, object: ContainerDTO) -> Result<ContainerDTO, RepoError> {
         let row = query!(
             r#"
             INSERT INTO
@@ -182,7 +185,7 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         })
     }
 
-    async fn update(&self, object: ContainerDTO) -> Result<bool, Error> {
+    async fn update(&self, object: ContainerDTO) -> Result<bool, RepoError> {
         let row = query!(
             r#"
         UPDATE container SET
@@ -233,7 +236,7 @@ impl DataRepository<ContainerDTO> for ContainerDAL {
         Ok(row.rows_affected() > 0)
     }
 
-    async fn delete(&self, id: i64) -> Result<bool, Error> {
+    async fn delete(&self, id: i64) -> Result<bool, RepoError> {
         let row = query!(r#"DELETE FROM container WHERE id=$1;"#, id)
             .execute(&self.pool)
             .await

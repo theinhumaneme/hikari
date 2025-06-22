@@ -7,7 +7,7 @@ use serde::Deserialize;
 use crate::{
     mode::server::AppState,
     server::{
-        common::map_db_error,
+        common::map_repo_error,
         dal::{deploy_config_dal::DeployConfigDAL, stack_config_dal::StackConfigDAL},
         models::stack_config::StackConfigDTO,
         traits::model::DataRepository,
@@ -20,7 +20,7 @@ pub async fn get_all_stacks(
     Extension(state): Extension<Arc<AppState>>,
 ) -> Result<Json<Vec<StackConfigDTO>>, (StatusCode, String)> {
     let stack_config_dal = StackConfigDAL::new(&state.pool);
-    let value = stack_config_dal.find_all().await.map_err(map_db_error)?;
+    let value = stack_config_dal.find_all().await.map_err(map_repo_error)?;
     Ok(Json(value))
 }
 #[derive(Deserialize)]
@@ -37,7 +37,7 @@ pub async fn get_stack(
     let value = stack_config_dal
         .find_by_id(id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     Ok(Json(value))
 }
 
@@ -56,7 +56,7 @@ pub async fn post_stack(
     let deployment_exists = deploy_config_dal
         .exists(payload.deployment_id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !deployment_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -74,11 +74,11 @@ pub async fn post_stack(
             containers: payload.containers.clone(),
         })
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     let deployment = stack_config_dal
         .get_deployment_metadata(stack.id.unwrap())
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     tokio::spawn(async move {
         broadcast(
             state,
@@ -103,7 +103,7 @@ pub async fn update_stack(
     let deployment_exists = deploy_config_dal
         .exists(payload.deployment_id)
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !deployment_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -114,7 +114,7 @@ pub async fn update_stack(
     let record_exists = stack_config_dal
         .exists(payload.id.unwrap())
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -125,7 +125,7 @@ pub async fn update_stack(
         == stack_config_dal
             .find_by_id(payload.id.unwrap())
             .await
-            .map_err(map_db_error)?
+            .map_err(map_repo_error)?
     {
         return Err((
             StatusCode::NOT_MODIFIED,
@@ -142,12 +142,12 @@ pub async fn update_stack(
             containers: payload.containers.clone(),
         })
         .await
-        .map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
     if updated {
         let deployment = stack_config_dal
             .get_deployment_metadata(payload.id.unwrap())
             .await
-            .map_err(map_db_error)?;
+            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,
@@ -161,7 +161,7 @@ pub async fn update_stack(
             .find_by_id(payload.id.unwrap())
             .await
             .map(Json)
-            .map_err(map_db_error)
+            .map_err(map_repo_error)
     } else {
         Err((
             StatusCode::BAD_REQUEST,
@@ -176,7 +176,7 @@ pub async fn delete_stack(
     Query(QueryParams { id }): Query<QueryParams>,
 ) -> Result<Json<StackConfigDTO>, (StatusCode, String)> {
     let stack_config_dal = StackConfigDAL::new(&state.pool);
-    let record_exists = stack_config_dal.exists(id).await.map_err(map_db_error)?;
+    let record_exists = stack_config_dal.exists(id).await.map_err(map_repo_error)?;
     if !record_exists {
         return Err((
             StatusCode::NOT_FOUND,
@@ -187,13 +187,13 @@ pub async fn delete_stack(
     let stack = stack_config_dal
         .find_by_id(id)
         .await
-        .map_err(map_db_error)?;
-    let deleted = stack_config_dal.delete(id).await.map_err(map_db_error)?;
+        .map_err(map_repo_error)?;
+    let deleted = stack_config_dal.delete(id).await.map_err(map_repo_error)?;
     if deleted {
         let deployment = stack_config_dal
             .get_deployment_metadata(id)
             .await
-            .map_err(map_db_error)?;
+            .map_err(map_repo_error)?;
         tokio::spawn(async move {
             broadcast(
                 state,

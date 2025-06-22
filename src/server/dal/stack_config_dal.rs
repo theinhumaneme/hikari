@@ -1,9 +1,12 @@
 use log::error;
-use sqlx::{Error, PgPool, query, query_as, query_scalar};
+use sqlx::{PgPool, query, query_as, query_scalar};
 
-use crate::server::{
-    models::{deploy_config::DeployConfigDTO, stack_config::StackConfigDTO},
-    traits::model::DataRepository,
+use crate::{
+    server::{
+        models::{deploy_config::DeployConfigDTO, stack_config::StackConfigDTO},
+        traits::model::DataRepository,
+    },
+    utils::error::RepoError,
 };
 
 pub struct StackConfigDAL {
@@ -16,7 +19,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Self { pool: pool.clone() }
     }
 
-    async fn exists(&self, id: i64) -> Result<bool, Error> {
+    async fn exists(&self, id: i64) -> Result<bool, RepoError> {
         let exists = query_scalar!(
             "SELECT EXISTS(SELECT id FROM compose_stack WHERE id = $1)",
             id
@@ -26,7 +29,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Ok(exists.unwrap_or(false))
     }
 
-    async fn find_all(&self) -> Result<Vec<StackConfigDTO>, Error> {
+    async fn find_all(&self) -> Result<Vec<StackConfigDTO>, RepoError> {
         let compose_stacks: Vec<StackConfigDTO> = query_as!(
             StackConfigDTO,
             r#"
@@ -55,7 +58,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Ok(compose_stacks)
     }
 
-    async fn find_by_id(&self, id: i64) -> Result<StackConfigDTO, Error> {
+    async fn find_by_id(&self, id: i64) -> Result<StackConfigDTO, RepoError> {
         let compose_stack: StackConfigDTO = query_as!(
             StackConfigDTO,
             r#"
@@ -85,7 +88,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Ok(compose_stack)
     }
 
-    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, Error> {
+    async fn get_deployment_metadata(&self, id: i64) -> Result<DeployConfigDTO, RepoError> {
         let deployment: DeployConfigDTO = query_as!(
             DeployConfigDTO,
             r#"
@@ -116,7 +119,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Ok(deployment)
     }
 
-    async fn create(&self, object: StackConfigDTO) -> Result<StackConfigDTO, Error> {
+    async fn create(&self, object: StackConfigDTO) -> Result<StackConfigDTO, RepoError> {
         let row = query!(
             r#"
             INSERT INTO
@@ -145,7 +148,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         })
     }
 
-    async fn update(&self, object: StackConfigDTO) -> Result<bool, Error> {
+    async fn update(&self, object: StackConfigDTO) -> Result<bool, RepoError> {
         let row = query!(
             r#"UPDATE compose_stack
             SET deployment_id=$2,
@@ -168,7 +171,7 @@ impl DataRepository<StackConfigDTO> for StackConfigDAL {
         Ok(row.rows_affected() > 0)
     }
 
-    async fn delete(&self, id: i64) -> Result<bool, Error> {
+    async fn delete(&self, id: i64) -> Result<bool, RepoError> {
         let row = query!(r#"DELETE FROM compose_stack WHERE id=$1;"#, id)
             .execute(&self.pool)
             .await
