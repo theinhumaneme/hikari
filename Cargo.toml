@@ -1,6 +1,6 @@
 [package]
 name = "hikari"
-version = "2.0.0"
+version = "2.1.0"
 edition = "2024"
 authors = ["Kalyan Mudumby"]
 description = "Rule all your VMs handsfree with hikari - A lightweight deployment manager, A highly configurable node specific deployment solution."
