@@ -13,12 +13,12 @@ use crate::{
     },
 };
 
-pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdateOptions) -> () {
-    let secrets = load_secrets("agent");
-    let host = secrets[0].clone();
-
+pub async fn configuration_init(
+    node_config: &NodeConfig,
+    node_update_config: &NodeUpdateOptions,
+    host: String,
+) {
     let mut incoming_config: HikariConfig = HikariConfig::default();
-
     match load_config_from_url(
         format!(
             "https://{}/api/v1/hikari/metadata?client={}&environment={}&solution={}",
@@ -54,6 +54,13 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
             error!("Error loading reference configuration: {e}");
         }
     }
+}
+
+pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdateOptions) {
+    let secrets = load_secrets("agent");
+    let host = secrets[0].clone();
+
+    configuration_init(node_config, node_update_config, host.clone()).await;
     const MAX_BACKOFF: u64 = 64;
     let mut backoff: u64 = 1;
 
@@ -61,14 +68,17 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
         match connect_async(
             format!(
                 "ws://{}/ws?client={}&environment={}&solution={}",
-                host, node_config.client, node_config.environment, node_config.solution
+                host.clone(),
+                node_config.client,
+                node_config.environment,
+                node_config.solution
             )
             .as_str(),
         )
         .await
         {
             Ok((ws_stream, _)) => {
-                info!("Connected to {}", secrets[0]);
+                info!("Connected to {}", host.clone());
                 backoff = 1;
                 let (mut _ws_tx, mut ws_rx) = ws_stream.split();
 
@@ -79,43 +89,12 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
                                 let text = txt_bytes.as_str();
                                 if text == "DEPLOYMENT UPDATED" {
                                     info!("{text}");
-                                    match load_config_from_url(
-                                        format!(
-                                            "https://{}/api/v1/hikari/metadata?client={}&environment={}&solution={}",
-                                            host, node_config.client, node_config.environment, node_config.solution
-                                        )
-                                        .as_str(),
+                                    configuration_init(
+                                        node_config,
+                                        node_update_config,
+                                        host.clone(),
                                     )
-                                    .await
-                                    {
-                                        Ok(config) => incoming_config = config,
-                                        Err(e) => {
-                                            error!("Error loading initial configuration: {e}");
-                                        }
-                                    }
-
-                                    match load_hikari_config(
-                                        &node_update_config.reference_file_path,
-                                    ) {
-                                        Ok(reference) => {
-                                            manage_node(
-                                                &reference,
-                                                &incoming_config,
-                                                &node_config.client,
-                                                &node_config.environment,
-                                                &node_config.solution,
-                                            );
-                                            write_file(
-                                                serde_json::to_string(&incoming_config)
-                                                    .expect("Failed to serialize JSON")
-                                                    .as_str(),
-                                                &node_update_config.reference_file_path,
-                                            );
-                                        }
-                                        Err(e) => {
-                                            error!("Error loading reference configuration: {e}");
-                                        }
-                                    }
+                                    .await;
                                 }
                             }
                             Message::Binary(_bin) => { /* ignore */ }
