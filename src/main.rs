@@ -12,15 +12,16 @@ use utils::{
     crypto::{decrypt_json, encrypt_json},
     docker_utils::dry_run_generate_compose,
     secrets::load_secrets,
+    error::ConfigError,
 };
 
 use crate::mode::agent::agent_mode;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), ConfigError> {
     let _ = log4rs::init_file("log4rs.yaml", Default::default());
     info!("Hikari Booting Up!");
-    let (main_config, update_options) = load_config();
+    let (main_config, update_options) = load_config()?;
     let cli = HikariCli::parse();
 
     match &cli.command {
@@ -62,4 +63,6 @@ async fn main() {
         }
         HikariCommands::Agent => agent_mode(&main_config, &update_options).await,
     }
+
+    Ok(())
 }

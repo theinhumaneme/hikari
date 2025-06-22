@@ -1,37 +1,21 @@
-use std::{fs, path::Path, process::exit};
+use std::{fs, path::Path};
 
-use log::{error, info};
+use log::info;
 use serde_json::json;
 
 use super::error::ConfigError;
 use crate::objects::structs::{HikariConfig, NodeConfig, NodeUpdateOptions, Validate};
 
-pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
-    let mut node_config: NodeConfig = Default::default();
-    if Path::exists(Path::new("node.toml")) {
-        node_config = match toml::from_str(fs::read_to_string("node.toml").unwrap().as_str()) {
-            Ok(c) => c,
-            Err(_) => {
-                error!("Could not load the `node.toml` file ");
-                exit(1);
-            }
-        };
-    } else {
-        error!("`node.toml` file does not exist")
-    }
-    let mut node_update_config: NodeUpdateOptions = Default::default();
-    if Path::exists(Path::new("config.toml")) {
-        node_update_config =
-            match toml::from_str(fs::read_to_string("config.toml").unwrap().as_str()) {
-                Ok(c) => c,
-                Err(_) => {
-                    error!("Could not load the `config.toml` file ");
-                    exit(1);
-                }
-            };
-    } else {
-        error!("`config.toml` file does not exist")
-    }
+pub fn load_config() -> Result<(NodeConfig, NodeUpdateOptions), ConfigError> {
+    let node_config: NodeConfig = {
+        let contents = fs::read_to_string("node.toml").map_err(ConfigError::FileError)?;
+        toml::from_str(&contents).map_err(ConfigError::TomlParseError)?
+    };
+
+    let node_update_config: NodeUpdateOptions = {
+        let contents = fs::read_to_string("config.toml").map_err(ConfigError::FileError)?;
+        toml::from_str(&contents).map_err(ConfigError::TomlParseError)?
+    };
     if !Path::new(&node_update_config.reference_file_path).exists() {
         info!(
             "Looks like hikari is being installed here, generating placeholder {}",
@@ -45,7 +29,7 @@ pub fn load_config() -> (NodeConfig, NodeUpdateOptions) {
         fs::write(&node_update_config.reference_file_path, json_data)
             .expect("Unable to write file");
     }
-    (node_config, node_update_config)
+    Ok((node_config, node_update_config))
 }
 
 pub fn load_hikari_config(file_path: &str) -> Result<HikariConfig, ConfigError> {

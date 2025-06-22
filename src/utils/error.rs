@@ -10,6 +10,9 @@ pub enum ConfigError {
 
     #[error("Failed to parse JSON: {0}")]
     JsonParseError(#[from] serde_json::Error),
+
+    #[error("Failed to parse TOML: {0}")]
+    TomlParseError(#[from] toml::de::Error),
 }
 
 #[derive(Debug, Error)]
