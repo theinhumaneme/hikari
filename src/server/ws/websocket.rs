@@ -60,9 +60,10 @@ pub async fn handle_socket(
 ) {
     let (mut ws_tx, _ws_rx) = socket.split();
 
+    let key = format!("{environment}_{solution}_{client}");
     let sender = {
         let mut map = state.channel_map.write().await;
-        map.entry(format!("{environment}_{solution}_{client}").clone())
+        map.entry(key.clone())
             .or_insert_with(|| channel(100).0)
             .clone()
     };
@@ -75,6 +76,12 @@ pub async fn handle_socket(
                 info!("something wrong");
                 break;
             }
+        }
+
+        // Clean up if no more receivers exist
+        if sender.receiver_count() == 0 {
+            let mut map = state.channel_map.write().await;
+            map.remove(&key);
         }
     });
 }
