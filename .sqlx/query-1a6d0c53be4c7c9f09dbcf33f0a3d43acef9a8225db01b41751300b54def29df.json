@@ -1,6 +1,6 @@
 {
   "db_name": "PostgreSQL",
-  "query": "\n            SELECT dc.id,\n            dc.client,\n            dc.name,\n            dc.environment,\n            dc.solution,\n            COALESCE(\n                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),\n                ARRAY[]::BIGINT[]\n            ) AS stack_ids\n            FROM deploy_config AS dc\n            LEFT JOIN compose_stack AS cs\n            ON cs.deployment_id = dc.id\n            WHERE dc.id = $1\n            GROUP BY dc.id, dc.client, dc.environment, dc.solution;\n            ",
+  "query": "\n            SELECT dc.id,\n            dc.name,\n            dc.client,\n            dc.environment,\n            dc.solution,\n            COALESCE(\n                array_agg(cs.id) FILTER (WHERE cs.id IS NOT NULL),\n                ARRAY[]::BIGINT[]\n            ) AS stack_ids\n            FROM deploy_config AS dc\n            LEFT JOIN compose_stack AS cs\n            ON cs.deployment_id = dc.id\n            WHERE dc.id = $1\n            GROUP BY dc.id, dc.client, dc.environment, dc.solution;\n            ",
   "describe": {
     "columns": [
       {
@@ -10,12 +10,12 @@
       },
       {
         "ordinal": 1,
-        "name": "client",
+        "name": "name",
         "type_info": "Text"
       },
       {
         "ordinal": 2,
-        "name": "name",
+        "name": "client",
         "type_info": "Text"
       },
       {
@@ -48,5 +48,5 @@
       null
     ]
   },
-  "hash": "b6b7cdcea6524991fdd85798b6aa3a9083f7cc2d8721f5604a3ab90e6dd89807"
+  "hash": "1a6d0c53be4c7c9f09dbcf33f0a3d43acef9a8225db01b41751300b54def29df"
 }
