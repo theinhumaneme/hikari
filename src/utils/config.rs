@@ -25,9 +25,8 @@ pub fn load_config() -> Result<(NodeConfig, NodeUpdateOptions), ConfigError> {
             "version": "1",
             "deploy_configs": {}
         });
-        let json_data = serde_json::to_string_pretty(&config).expect("Failed to serialize JSON");
-        fs::write(&node_update_config.reference_file_path, json_data)
-            .expect("Unable to write file");
+        let json_data = serde_json::to_string_pretty(&config)?;
+        fs::write(&node_update_config.reference_file_path, json_data)?;
     }
     Ok((node_config, node_update_config))
 }

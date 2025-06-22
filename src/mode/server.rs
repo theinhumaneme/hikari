@@ -26,7 +26,7 @@ use crate::{
         },
         ws::websocket::websocket_handler,
     },
-    utils::secrets::load_secrets,
+    utils::{error::ConfigError, secrets::load_secrets},
 };
 
 #[derive(Clone, Debug)]
@@ -35,8 +35,8 @@ pub struct AppState {
     pub channel_map: Arc<RwLock<HashMap<String, Sender<String>>>>,
 }
 
-pub async fn server_mode() {
-    let secrets = load_secrets("server");
+pub async fn server_mode() -> Result<(), ConfigError> {
+    let secrets = load_secrets("server")?;
     let pool = PgPoolOptions::new()
         .test_before_acquire(true)
         .max_connections(50)
@@ -80,4 +80,5 @@ pub async fn server_mode() {
     // run our app with hyper, listening globally on port 3000
     let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
+    Ok(())
 }

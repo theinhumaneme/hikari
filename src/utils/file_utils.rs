@@ -27,8 +27,8 @@ pub async fn copy_file(source: &str, destination: &str) {
         let _ = fs::write(destination, contents).await;
     }
 }
-pub async fn write_file(contents: &str, destination: &str) {
-    let _ = fs::write(destination, contents).await;
+pub async fn write_file(contents: &str, destination: &str) -> std::io::Result<()> {
+    fs::write(destination, contents).await
 }
 pub async fn load_config_from_url(url: &str) -> Result<HikariConfig, Error> {
     let response = reqwest::get(url).await?;

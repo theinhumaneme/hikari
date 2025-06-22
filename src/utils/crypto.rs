@@ -90,7 +90,11 @@ pub fn decrypt_json(
     }
 
     // Read the key length
-    let key_len = u32::from_be_bytes(encrypted_data[..4].try_into().unwrap()) as usize;
+    let key_len = u32::from_be_bytes(
+        encrypted_data[..4]
+            .try_into()
+            .map_err(|_| CryptoError::Decryption("Invalid file format".into()))?,
+    ) as usize;
 
     if encrypted_data.len() < 4 + key_len + 16 {
         return Err(CryptoError::Decryption("Invalid file format".to_string()));

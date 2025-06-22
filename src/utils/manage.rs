@@ -172,13 +172,19 @@ pub fn manage_stack(stack: &StackConfig, operation: StackOperation) -> bool {
         }
         StackOperation::Start => {
             manage_stack(stack, StackOperation::Pull);
-            let stack_filepath: String = generate_compose(
+            let stack_filepath = match generate_compose(
                 &stack.home_directory,
                 &stack.stack_name,
                 &stack.filename,
                 &stack.compose_spec,
-            );
-            match start_compose(&stack_filepath) {
+            ) {
+                Ok(path) => path,
+                Err(e) => {
+                    error!("Could not generate compose for {}: {e}", stack.stack_name);
+                    return false;
+                }
+            };
+            match start_compose(stack_filepath.to_str().unwrap()) {
                 true => {
                     info!("Successfully started added stack {}", stack.stack_name);
                     true
@@ -190,13 +196,19 @@ pub fn manage_stack(stack: &StackConfig, operation: StackOperation) -> bool {
             }
         }
         StackOperation::Pull => {
-            let stack_filepath: String = generate_compose(
+            let stack_filepath = match generate_compose(
                 &stack.home_directory,
                 &stack.stack_name,
                 &stack.filename,
                 &stack.compose_spec,
-            );
-            match pull_compose(&stack_filepath) {
+            ) {
+                Ok(path) => path,
+                Err(e) => {
+                    error!("Could not generate compose for {}: {e}", stack.stack_name);
+                    return false;
+                }
+            };
+            match pull_compose(stack_filepath.to_str().unwrap()) {
                 true => {
                     info!("Successfully pulled stack {}", stack.stack_name);
                     true

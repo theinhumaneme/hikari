@@ -1,7 +1,7 @@
 use std::{
     fs::{File, create_dir_all},
     io::{self, BufRead, Write},
-    path::Path,
+    path::{Path, PathBuf},
     process::{Command, Stdio},
     thread,
 };
@@ -9,33 +9,37 @@ use std::{
 use log::{error, info};
 
 use crate::objects::structs::ComposeSpec;
-pub fn dry_run_generate_compose(filename: String, compose_config: ComposeSpec) {
-    let yaml = serde_yaml::to_string(&compose_config).unwrap();
-    let base_path = format!("./{filename}").to_string().to_owned();
-    let mut file = File::create(&base_path).unwrap();
-    file.write_all(yaml.as_bytes()).unwrap();
+
+pub fn dry_run_generate_compose(
+    filename: String,
+    compose_config: ComposeSpec,
+) -> Result<PathBuf, io::Error> {
+    let yaml = serde_yaml::to_string(&compose_config)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    let base_path = PathBuf::from(format!("./{filename}"));
+    let mut file = File::create(&base_path)?;
+    file.write_all(yaml.as_bytes())?;
+    Ok(base_path)
 }
 pub fn generate_compose(
     compose_directory: &str,
     stack_name: &str,
     filename: &str,
     compose_config: &ComposeSpec,
-) -> String {
-    let yaml = serde_yaml::to_string(&compose_config).unwrap();
-    if !Path::new(&compose_directory).exists() {
-        // Create the folder if it doesn't exist
-        create_dir_all(compose_directory).unwrap();
+) -> Result<PathBuf, io::Error> {
+    let yaml = serde_yaml::to_string(compose_config)
+        .map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+    if !Path::new(compose_directory).exists() {
+        create_dir_all(compose_directory)?;
         info!("Directory created:{compose_directory}");
     } else {
         info!("Directory already exists: {compose_directory}");
     }
-    let base_path = format!("{compose_directory}/{filename}")
-        .to_string()
-        .to_owned();
-    let mut file = File::create(&base_path).unwrap();
-    file.write_all(yaml.as_bytes()).unwrap();
+    let base_path = Path::new(compose_directory).join(filename);
+    let mut file = File::create(&base_path)?;
+    file.write_all(yaml.as_bytes())?;
     info!("Generating Compose for {stack_name} Complete");
-    base_path
+    Ok(base_path)
 }
 
 pub fn execute_command(command: &str, args: Vec<&str>) -> bool {

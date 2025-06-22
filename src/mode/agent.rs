@@ -7,6 +7,7 @@ use crate::{
     objects::structs::{HikariConfig, NodeConfig, NodeUpdateOptions},
     utils::{
         config::load_hikari_config,
+        error::ConfigError,
         file_utils::{load_config_from_url, write_file},
         manage::manage_node,
         secrets::load_secrets,
@@ -17,7 +18,7 @@ pub async fn configuration_init(
     node_config: &NodeConfig,
     node_update_config: &NodeUpdateOptions,
     host: String,
-) {
+) -> Result<(), ConfigError> {
     let mut incoming_config: HikariConfig = HikariConfig::default();
     match load_config_from_url(
         format!(
@@ -43,25 +44,29 @@ pub async fn configuration_init(
                 &node_config.environment,
                 &node_config.solution,
             );
-            write_file(
-                serde_json::to_string(&incoming_config)
-                    .expect("Failed to serialize JSON")
-                    .as_str(),
-                &node_update_config.reference_file_path,
-            )
-            .await
+            let serialized =
+                serde_json::to_string(&incoming_config).map_err(ConfigError::JsonParseError)?;
+            write_file(&serialized, &node_update_config.reference_file_path)
+                .await
+                .map_err(ConfigError::FileError)?;
         }
         Err(e) => {
             error!("Error loading reference configuration: {e}");
         }
     }
+    Ok(())
 }
 
-pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdateOptions) {
-    let secrets = load_secrets("agent");
+pub async fn agent_mode(
+    node_config: &NodeConfig,
+    node_update_config: &NodeUpdateOptions,
+) -> Result<(), ConfigError> {
+    let secrets = load_secrets("agent")?;
     let host = secrets[0].clone();
 
-    configuration_init(node_config, node_update_config, host.clone()).await;
+    if let Err(e) = configuration_init(node_config, node_update_config, host.clone()).await {
+        error!("Error updating configuration: {e}");
+    }
     const MAX_BACKOFF: u64 = 64;
     let mut backoff: u64 = 1;
 
@@ -90,12 +95,15 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
                                 let text = txt_bytes.as_str();
                                 if text == "DEPLOYMENT UPDATED" {
                                     info!("{text}");
-                                    configuration_init(
+                                    if let Err(e) = configuration_init(
                                         node_config,
                                         node_update_config,
                                         host.clone(),
                                     )
-                                    .await;
+                                    .await
+                                    {
+                                        error!("Error updating configuration: {e}");
+                                    }
                                 }
                             }
                             Message::Binary(_bin) => { /* ignore */ }
@@ -122,4 +130,6 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
         sleep(Duration::from_secs(backoff)).await;
         backoff = (backoff * 2).min(MAX_BACKOFF);
     }
+    #[allow(unreachable_code)]
+    Ok(())
 }
