@@ -1,6 +1,6 @@
-use std::{process::exit, thread, time::Duration};
-
 use log::error;
+use std::{process::exit, time::Duration};
+use tokio::time::sleep;
 
 use crate::{
     objects::structs::{NodeConfig, NodeUpdateOptions},
@@ -13,7 +13,7 @@ use crate::{
     },
 };
 
-pub fn daemon_mode(
+pub async fn daemon_mode(
     node_config: &NodeConfig,
     node_update_config: &NodeUpdateOptions,
     private_key_path: &str,
@@ -91,7 +91,7 @@ pub fn daemon_mode(
         _ => {}
     }
     if let Ok(poll_secs) = poll_interval.parse::<u64>() {
-        thread::sleep(Duration::from_secs(poll_secs));
+        sleep(Duration::from_secs(poll_secs)).await;
     } else {
         error!("Invalid poll_interval value");
     }

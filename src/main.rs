@@ -52,7 +52,7 @@ async fn main() {
         },
         HikariCommands::Daemon => loop {
             let keys = load_secrets("daemon");
-            if let Err(err) = daemon_mode(&main_config, &update_options, &keys[1]) {
+            if let Err(err) = daemon_mode(&main_config, &update_options, &keys[1]).await {
                 error!("{err}");
                 break;
             }
