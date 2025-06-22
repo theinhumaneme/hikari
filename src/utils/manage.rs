@@ -7,6 +7,13 @@ use crate::{
     utils::docker_utils::{generate_compose, pull_compose, start_compose, stop_compose},
 };
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum StackOperation {
+    Start,
+    Stop,
+    Pull,
+}
+
 pub fn manage_node(
     current_config: &HikariConfig,
     incoming_config: &HikariConfig,
@@ -39,7 +46,7 @@ pub fn manage_node(
                     .iter()
                     .for_each(|stack| {
                         info!("Stopping Stack {}", stack.stack_name);
-                        manage_stack(stack, "stop");
+                        manage_stack(stack, StackOperation::Stop);
                     });
             } else {
                 // Parameters match; compare stacks
@@ -53,7 +60,7 @@ pub fn manage_node(
                 .iter()
                 .for_each(|stack| {
                     info!("Stopping Stack {}", stack.stack_name);
-                    manage_stack(stack, "stop");
+                    manage_stack(stack, StackOperation::Stop);
                 });
         }
     }
@@ -84,7 +91,7 @@ pub fn manage_node(
                     .iter()
                     .for_each(|stack| {
                         info!("Starting Stack {}", stack.stack_name);
-                        manage_stack(stack, "start");
+                        manage_stack(stack, StackOperation::Start);
                     });
             } else {
                 // No changes detected
@@ -97,7 +104,7 @@ pub fn manage_node(
                 .deploy_stacks
                 .iter()
                 .for_each(|stack| {
-                    manage_stack(stack, "start");
+                    manage_stack(stack, StackOperation::Start);
                 });
         }
     }
@@ -125,7 +132,7 @@ fn compare_stacks(current_deploy_config: &DeployConfig, incoming_deploy_config: 
         .collect();
     removed_stacks.iter().for_each(|stack| {
         info!("Stopping stack {}", stack.stack_name);
-        let _ = manage_stack(stack, "stop");
+        let _ = manage_stack(stack, StackOperation::Stop);
     });
     for (stack_name, incoming_stack) in &incoming_stacks {
         if let Some(current_stack) = current_stacks.get(stack_name) {
@@ -135,23 +142,23 @@ fn compare_stacks(current_deploy_config: &DeployConfig, incoming_deploy_config: 
             } else {
                 info!("changes detected in stack {}", current_stack.stack_name);
                 info!("Stopping stack {}", current_stack.stack_name);
-                match manage_stack(current_stack, "stop") {
+                match manage_stack(current_stack, StackOperation::Stop) {
                     true => {
                         info!("Starting Stack {}", incoming_stack.stack_name);
-                        manage_stack(incoming_stack, "start");
+                        manage_stack(incoming_stack, StackOperation::Start);
                     }
                     false => continue,
                 }
             }
         } else {
-            manage_stack(incoming_stack, "start");
+            manage_stack(incoming_stack, StackOperation::Start);
         }
     }
 }
 
-pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
+pub fn manage_stack(stack: &StackConfig, operation: StackOperation) -> bool {
     match operation {
-        "stop" => {
+        StackOperation::Stop => {
             match stop_compose(format!("{}/{}", stack.home_directory, stack.filename).as_str()) {
                 true => {
                     info!("Successfully stopped removed stack {}", stack.stack_name);
@@ -163,23 +170,14 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
                 }
             }
         }
-        "start" => {
+        StackOperation::Start => {
+            manage_stack(stack, StackOperation::Pull);
             let stack_filepath: String = generate_compose(
                 &stack.home_directory,
                 &stack.stack_name,
                 &stack.filename,
                 &stack.compose_spec,
             );
-            match pull_compose(&stack_filepath) {
-                true => {
-                    info!("Successfully pulled added stack {}", stack.stack_name);
-                }
-                false => {
-                    error!("Could not pull added stack {}", stack.stack_name);
-                    return false;
-                }
-            }
-
             match start_compose(&stack_filepath) {
                 true => {
                     info!("Successfully started added stack {}", stack.stack_name);
@@ -191,9 +189,23 @@ pub fn manage_stack(stack: &StackConfig, operation: &str) -> bool {
                 }
             }
         }
-        _ => {
-            error!("invalid operation {operation}");
-            false
+        StackOperation::Pull => {
+            let stack_filepath: String = generate_compose(
+                &stack.home_directory,
+                &stack.stack_name,
+                &stack.filename,
+                &stack.compose_spec,
+            );
+            match pull_compose(&stack_filepath) {
+                true => {
+                    info!("Successfully pulled stack {}", stack.stack_name);
+                    true
+                }
+                false => {
+                    error!("Could not pull stack {}", stack.stack_name);
+                    false
+                }
+            }
         }
     }
 }
