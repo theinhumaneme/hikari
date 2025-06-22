@@ -1,5 +1,6 @@
 use futures::StreamExt;
 use log::{error, info};
+use tokio::time::{Duration, sleep};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
 use crate::{
@@ -53,70 +54,92 @@ pub async fn agent_mode(node_config: &NodeConfig, node_update_config: &NodeUpdat
             error!("Error loading reference configuration: {e}");
         }
     }
+    const MAX_BACKOFF: u64 = 64;
+    let mut backoff: u64 = 1;
 
-    let (ws_stream, _) = connect_async(
-        format!(
-            "ws://{}/ws?client={}&environment={}&solution={}",
-            host, node_config.client, node_config.environment, node_config.solution
+    loop {
+        match connect_async(
+            format!(
+                "ws://{}/ws?client={}&environment={}&solution={}",
+                host, node_config.client, node_config.environment, node_config.solution
+            )
+            .as_str(),
         )
-        .as_str(),
-    )
-    .await
-    .expect("failed to connect to websocket");
-    info!("Connected to {}", secrets[0]);
+        .await
+        {
+            Ok((ws_stream, _)) => {
+                info!("Connected to {}", secrets[0]);
+                backoff = 1;
+                let (mut _ws_tx, mut ws_rx) = ws_stream.split();
 
-    let (mut _ws_tx, mut ws_rx) = ws_stream.split();
+                while let Some(msg_res) = ws_rx.next().await {
+                    match msg_res {
+                        Ok(message) => match message {
+                            Message::Text(txt_bytes) => {
+                                let text = txt_bytes.as_str();
+                                if text == "DEPLOYMENT UPDATED" {
+                                    info!("{text}");
+                                    match load_config_from_url(
+                                        format!(
+                                            "https://{}/api/v1/hikari/metadata?client={}&environment={}&solution={}",
+                                            host, node_config.client, node_config.environment, node_config.solution
+                                        )
+                                        .as_str(),
+                                    )
+                                    .await
+                                    {
+                                        Ok(config) => incoming_config = config,
+                                        Err(e) => {
+                                            error!("Error loading initial configuration: {e}");
+                                        }
+                                    }
 
-    while let Some(Ok(message)) = ws_rx.next().await {
-        match message {
-            Message::Text(txt_bytes) => {
-                let text = txt_bytes.as_str();
-                if text == "DEPLOYMENT UPDATED" {
-                    info!("{text}");
-                    match load_config_from_url(
-                        format!(
-                            "https://{}/api/v1/hikari/metadata?client={}&environment={}&solution={}",
-                            host, node_config.client, node_config.environment, node_config.solution
-                        )
-                        .as_str(),
-                    )
-                    .await
-                    {
-                        Ok(config) => incoming_config = config,
+                                    match load_hikari_config(
+                                        &node_update_config.reference_file_path,
+                                    ) {
+                                        Ok(reference) => {
+                                            manage_node(
+                                                &reference,
+                                                &incoming_config,
+                                                &node_config.client,
+                                                &node_config.environment,
+                                                &node_config.solution,
+                                            );
+                                            write_file(
+                                                serde_json::to_string(&incoming_config)
+                                                    .expect("Failed to serialize JSON")
+                                                    .as_str(),
+                                                &node_update_config.reference_file_path,
+                                            );
+                                        }
+                                        Err(e) => {
+                                            error!("Error loading reference configuration: {e}");
+                                        }
+                                    }
+                                }
+                            }
+                            Message::Binary(_bin) => { /* ignore */ }
+                            Message::Ping(_) | Message::Pong(_) => { /* ignore heartbeats */ }
+                            Message::Close(_) => {
+                                error!("Server Closed Connection");
+                                break;
+                            }
+                            _ => {}
+                        },
                         Err(e) => {
-                            error!("Error loading initial configuration: {e}");
-                        }
-                    }
-
-                    match load_hikari_config(&node_update_config.reference_file_path) {
-                        Ok(reference) => {
-                            manage_node(
-                                &reference,
-                                &incoming_config,
-                                &node_config.client,
-                                &node_config.environment,
-                                &node_config.solution,
-                            );
-                            write_file(
-                                serde_json::to_string(&incoming_config)
-                                    .expect("Failed to serialize JSON")
-                                    .as_str(),
-                                &node_update_config.reference_file_path,
-                            );
-                        }
-                        Err(e) => {
-                            error!("Error loading reference configuration: {e}");
+                            error!("WebSocket receive error: {e}");
+                            break;
                         }
                     }
                 }
             }
-            Message::Binary(_bin) => { /* ignore */ }
-            Message::Ping(_) | Message::Pong(_) => { /* ignore heartbeats */ }
-            Message::Close(_frame) => {
-                error!("Server Closed Connection");
-                break;
+            Err(e) => {
+                error!("WebSocket connection failed: {e}");
             }
-            _ => {}
         }
+
+        info!("Reconnecting in {backoff} seconds");
+        sleep(Duration::from_secs(backoff)).await;
+        backoff = (backoff * 2).min(MAX_BACKOFF);
     }
 }
