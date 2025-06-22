@@ -48,7 +48,8 @@ pub async fn configuration_init(
                     .expect("Failed to serialize JSON")
                     .as_str(),
                 &node_update_config.reference_file_path,
-            );
+            )
+            .await
         }
         Err(e) => {
             error!("Error loading reference configuration: {e}");

@@ -1,30 +1,34 @@
-use std::{
-    fs::{self, File},
-    io::copy,
-};
-
 use log::error;
-use reqwest::{Error, blocking::Client};
+use reqwest::Error;
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 
 use crate::objects::structs::HikariConfig;
 
-pub fn download_file(file_url: &str, filename: &str) -> Result<bool, Error> {
-    let client = Client::builder().build()?;
-    let response = client.get(file_url).send()?;
+pub async fn download_file(file_url: &str, filename: &str) -> Result<bool, Error> {
+    let client = reqwest::Client::new();
+    let mut response = client.get(file_url).send().await?;
     if !response.status().is_success() {
         return Ok(false);
     }
-    let mut file = File::create(filename).unwrap();
-    let _ = copy(&mut response.bytes()?.as_ref(), &mut file)
-        .map_err(|err| error!("Unable to download the file - Error {err}"));
+    let mut file = File::create(filename).await.unwrap();
+    while let Some(chunk) = response.chunk().await? {
+        if let Err(err) = file.write_all(&chunk).await {
+            error!("Unable to download the file - Error {err}");
+        }
+    }
     Ok(true)
 }
 
-pub fn copy_file(source: &str, destination: &str) {
-    let _ = fs::write(destination, fs::read(source).unwrap());
+pub async fn copy_file(source: &str, destination: &str) {
+    if let Ok(contents) = fs::read(source).await {
+        let _ = fs::write(destination, contents).await;
+    }
 }
-pub fn write_file(contents: &str, destination: &str) {
-    let _ = fs::write(destination, contents);
+pub async fn write_file(contents: &str, destination: &str) {
+    let _ = fs::write(destination, contents).await;
 }
 pub async fn load_config_from_url(url: &str) -> Result<HikariConfig, Error> {
     let response = reqwest::get(url).await?;

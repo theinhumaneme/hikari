@@ -1,5 +1,6 @@
-use log::error;
 use std::{process::exit, time::Duration};
+
+use log::error;
 use tokio::time::sleep;
 
 use crate::{
@@ -42,7 +43,7 @@ pub async fn daemon_mode(
         return Err(ConfigError::MissingField("poll_interval".into()));
     };
 
-    match download_file(remote_url, encrypted_file_path) {
+    match download_file(remote_url, encrypted_file_path).await {
         Ok(true) => {
             match decrypt_json(encrypted_file_path, decrypted_file_path, private_key_path) {
                 Ok(()) => match load_hikari_config(decrypted_file_path) {
@@ -60,7 +61,8 @@ pub async fn daemon_mode(
                                     copy_file(
                                         decrypted_file_path,
                                         &node_update_config.reference_file_path,
-                                    );
+                                    )
+                                    .await
                                 }
                                 Err(e) => {
                                     error!("Error loading reference configuration: {e}");
