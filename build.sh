@@ -1,15 +1,23 @@
 #!/usr/bin/env bash
 set -euo pipefail
 export SQLX_OFFLINE=true
-# List all the targets you want to build
-TARGETS=(
-    aarch64-unknown-linux-gnu
-    x86_64-pc-windows-gnu
-    x86_64-unknown-linux-gnu
-    aarch64-unknown-linux-musl
-    x86_64-unknown-linux-musl
 
-)
+BIN_BASE="hikari"
+
+# Pass one or more targets to override the default release matrix.
+if [[ "$#" -gt 0 ]]; then
+  TARGETS=("$@")
+else
+  TARGETS=(
+      aarch64-apple-darwin
+      x86_64-apple-darwin
+      aarch64-unknown-linux-gnu
+      x86_64-unknown-linux-gnu
+      aarch64-unknown-linux-musl
+      x86_64-unknown-linux-musl
+      x86_64-pc-windows-gnu
+  )
+fi
 
 # Base output directory in your current working directory
 OUTDIR="$(pwd)/releases"
@@ -19,12 +27,22 @@ echo "Building for targets: ${TARGETS[*]}"
 echo "All artifacts will be collected under $OUTDIR"
 echo
 
-# Derive your binary base name (without extension)
-BIN_BASE="$(basename "$(pwd)")"
+run_build() {
+  local tgt="$1"
+
+  case "$tgt" in
+    *-apple-darwin)
+      cargo build --release --target "$tgt"
+      ;;
+    *)
+      cross build --release --target "$tgt"
+      ;;
+  esac
+}
 
 for tgt in "${TARGETS[@]}"; do
   echo "→ Building $tgt"
-  cross build --release --target "$tgt"
+  run_build "$tgt"
 
   # Determine built file(s)
   SRC_DIR="target/$tgt/release"
